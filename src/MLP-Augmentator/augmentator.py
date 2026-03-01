@@ -19,38 +19,109 @@ from pathlib import Path
 import argparse
 from tqdm import tqdm
 
-#region perspective()
-def rotation_perspective(image, angle=None):
+#region resize()
+def resize_image(image, target_size, keep_aspect_ratio=True, padding_color=(255, 255, 255)):
     """
-    Apply random rotation and perspective transformation to simulate
-    non-ideal capture angles.
+    Resize image to target dimensions with optional aspect ratio preservation.
     
     Args:
         image: Input image (numpy array)
-        angle: Optional specific rotation angle
+        target_size: Tuple of (width, height) for output image
+        keep_aspect_ratio: If True, maintains aspect ratio and adds padding
+                          If False, stretches image to target size
+        padding_color: RGB color for padding areas when keep_aspect_ratio=True
     
     Returns:
-        Transformed image with rotation and perspective distortion
+        Resized image with target dimensions
+    """
+    target_w, target_h = target_size
+    
+    if keep_aspect_ratio:
+        # Get original dimensions
+        h, w = image.shape[:2]
+        
+        # Calculate scaling factor to fit within target size
+        scale = min(target_w / w, target_h / h)
+        new_w = int(w * scale)
+        new_h = int(h * scale)
+        
+        # Resize image maintaining aspect ratio
+        resized = cv2.resize(image, (new_w, new_h), interpolation=cv2.INTER_LINEAR)
+        
+        # Create canvas with target size and padding color
+        canvas = np.full((target_h, target_w, 3), padding_color, dtype=np.uint8)
+        
+        # Calculate position to center the image
+        x_offset = (target_w - new_w) // 2
+        y_offset = (target_h - new_h) // 2
+        
+        # Place resized image on canvas
+        canvas[y_offset:y_offset+new_h, x_offset:x_offset+new_w] = resized
+        
+        return canvas
+    else:
+        # Simple stretch to target size
+        return cv2.resize(image, (target_w, target_h), interpolation=cv2.INTER_LINEAR)
+#endregion
+
+#region perspective()
+def rotation_perspective(image, angle=None, tilt=None, swing=None):
+    """
+    Creates perspective distortions by directly manipulating corner points
+    with controlled randomness.
+    
+    Args:
+        image: Input image (numpy array)
+    
+    Returns:
+        Transformed image with perspective distortion
     """
     h, w = image.shape[:2]
-    if angle is None:
-        angle = random.randint(-25, 25)  # Random rotation between -25 and 25 degrees
     
-    # Rotation
-    rotation_matrix = cv2.getRotationMatrix2D((w//2, h//2), angle, 1)
-    rotated = cv2.warpAffine(image, rotation_matrix, (w, h))
+    # Generate random perspective parameters
+    tilt_forward = random.uniform(-0.35, 0.35) # Effect of forward/backward tilt
+    tilt_side = random.uniform(-0.35, 0.35) # Effect of side tilt
     
-    # Random perspective distortion
-    source_points = np.float32([[0, 0], [w, 0], [0, h], [w, h]])
-    target_points = np.float32([
-        [random.randint(0, 20), random.randint(0, 20)],
-        [w - random.randint(0, 20), random.randint(0, 20)],
-        [random.randint(0, 20), h - random.randint(0, 20)],
-        [w - random.randint(0, 20), h - random.randint(0, 20)]
-    ])
+    # Calculate corner displacements based on tilt parameters
+    top_left = [
+        random.uniform(-20, 0) + tilt_side * w * 0.1,
+        random.uniform(-20, 0) + tilt_forward * h * 0.1
+    ]
     
-    perspective_matrix = cv2.getPerspectiveTransform(source_points, target_points)
-    return cv2.warpPerspective(rotated, perspective_matrix, (w, h))
+    top_right = [
+        w + random.uniform(0, 20) - tilt_side * w * 0.1,
+        random.uniform(-20, 0) - tilt_forward * h * 0.1
+    ]
+    
+    bottom_left = [
+        random.uniform(-20, 0) - tilt_side * w * 0.1,
+        h + random.uniform(0, 20) - tilt_forward * h * 0.1
+    ]
+    
+    bottom_right = [
+        w + random.uniform(0, 20) + tilt_side * w * 0.1,
+        h + random.uniform(0, 20) + tilt_forward * h * 0.1
+    ]
+    
+    # Define source and destination points
+    src_points = np.float32([[0, 0], [w, 0], [0, h], [w, h]])
+    dst_points = np.float32([top_left, top_right, bottom_left, bottom_right])
+    
+    try:
+        # Calculate and apply perspective transform
+        matrix = cv2.getPerspectiveTransform(src_points, dst_points)
+        result = cv2.warpPerspective(
+            image, 
+            matrix, 
+            (w, h),
+            borderMode=cv2.BORDER_CONSTANT,
+            borderValue=(255, 255, 255)
+        )
+        return result
+        
+    except cv2.error:
+        # If transform fails, return original image
+        return image
 #endregion
 
 #region motion_blur()
@@ -272,15 +343,19 @@ AVAILABLE_TRANSFORMS = {
 #endregion
 
 #region image_processing()
-def process_image(image_path, output_dir, transforms, num_variations=1):
+def process_image(image_path, output_dir, transforms, num_variations=1,
+                  target_size=None, keep_aspect_ratio=True, padding_color=(255, 255, 255)):
     """
-    Process a single image by applying all transformations.
+    Process a single image by applying all transformations and resizing.
     
     Args:
         image_path: Path to input image
         output_dir: Output directory path
         transforms: Dictionary of transformation functions
         num_variations: Number of variations per transformation
+        target_size: Tuple of (width, height) for output images. If None, no resizing
+        keep_aspect_ratio: Maintain aspect ratio when resizing
+        padding_color: Color for padding when keep_aspect_ratio=True
     
     Returns:
         List of generated file paths
@@ -296,29 +371,42 @@ def process_image(image_path, output_dir, transforms, num_variations=1):
     extension = image_path.suffix
     
     generated_files = []
+    variation_counter = 1
     
     # Apply each transformation multiple times
     for transform_name, transform_func in transforms.items():
         for variation in range(num_variations):
             # Apply rotation/perspective first
             transformed = rotation_perspective(image)
+            
             # Apply specific transformation
             transformed = transform_func(transformed)
             
-            # Generate output filename
-            output_filename = f"{filename}_{transform_name}_v{variation+1}{extension}"
+            # Resize if target size is specified
+            if target_size is not None:
+                transformed = resize_image(
+                    transformed, 
+                    target_size, 
+                    keep_aspect_ratio=keep_aspect_ratio,
+                    padding_color=padding_color
+                )
+            
+            # Generate sequential filename
+            output_filename = f"{filename}_{variation_counter:03d}{extension}"
             output_path = output_dir / output_filename
             
             # Save image
             cv2.imwrite(str(output_path), transformed)
             generated_files.append(output_path)
+            
+            variation_counter += 1
     
     return generated_files
 #endregion
 
 #region main()
 # run this script from the command line as follows:
-# python .\augmentator.py --input_dir ../MLP-Generator/dataset --output_dir ./augmented_data
+# python .\augmentator.py --input_dir ../MLP-Generator/dataset --output_dir ./augmented_data --target_width 94 --target_height 24
 def main():
     """Main execution function."""
     parser = argparse.ArgumentParser(
@@ -348,9 +436,60 @@ def main():
         nargs="+",
         help="Specific transforms to apply (default: all)"
     )
+    parser.add_argument(
+        "--target_width", 
+        type=int, 
+        default=None,
+        help="Target width for output images (if not specified, original size is kept)"
+    )
+    parser.add_argument(
+        "--target_height", 
+        type=int, 
+        default=None,
+        help="Target height for output images (if not specified, original size is kept)"
+    )
+    parser.add_argument(
+        "--keep_aspect_ratio", 
+        action='store_true',
+        default=True,
+        help="Maintain aspect ratio when resizing (adds padding if necessary)"
+    )
+    parser.add_argument(
+        "--stretch", 
+        action='store_true',
+        help="Stretch image to target size without keeping aspect ratio"
+    )
+    parser.add_argument(
+        "--padding_color", 
+        type=str, 
+        default="white",
+        choices=['white', 'black', 'gray'],
+        help="Padding color when keeping aspect ratio (default: white)"
+    )
     
     args = parser.parse_args()
     
+    # Determine target size
+    target_size = None
+    if args.target_width is not None and args.target_height is not None:
+        target_size = (args.target_width, args.target_height)
+        print(f"Images will be resized to: {target_size[0]}x{target_size[1]}")
+        
+        # Set keep_aspect_ratio based on stretch flag
+        keep_aspect_ratio = not args.stretch
+        
+        # Set padding color
+        padding_colors = {
+            'white': (255, 255, 255),
+            'black': (0, 0, 0),
+            'gray': (128, 128, 128)
+        }
+        padding_color = padding_colors[args.padding_color]
+    else:
+        keep_aspect_ratio = True
+        padding_color = (255, 255, 255)
+        print("Images will keep original size")
+
     # Convert paths to Path objects
     input_dir = Path(args.input_dir)
     output_dir = Path(args.output_dir)
@@ -400,7 +539,10 @@ def main():
                 image_path, 
                 class_output_dir, 
                 transforms_to_apply,
-                args.num_variations
+                args.num_variations,
+                target_size=target_size,
+                keep_aspect_ratio=keep_aspect_ratio,
+                padding_color=padding_color
             )
             total_images += len(generated)
     
