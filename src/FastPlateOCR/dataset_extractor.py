@@ -25,7 +25,7 @@ def main():
     3. Resizes each image to target dimensions
     4. Saves resized images maintaining folder structure
     5. Creates train/val/test splits (80/10/10)
-    6. Generates CSV annotation files for each split
+    6. Generates CSV annotation files for each split with relative paths
     """
     
     # Get the directory where the script is located
@@ -89,8 +89,12 @@ def main():
                     os.makedirs(os.path.dirname(save_path), exist_ok=True)
                     cv2.imwrite(save_path, resized)
                     
-                    # Store annotation
-                    annotations.append([save_path, plate])
+                    # Store annotation with path relative to base_dir
+                    # This ensures Fast Plate OCR can find images when run from the same directory
+                    relative_to_base = os.path.relpath(save_path, base_dir)
+                    # Normalize path separators for cross-platform compatibility
+                    relative_to_base = relative_to_base.replace(os.sep, '/')
+                    annotations.append([relative_to_base, plate])
                     
                     # Update progress bar
                     pbar.update(1)
@@ -125,6 +129,14 @@ def main():
             writer.writerow(["image_path", "plate_text"])  # Write header
             writer.writerows(data)
         print(f"Generated {filename} with {len(data)} entries")
+        
+        # Verify first entry path exists
+        if data and len(data) > 0:
+            test_path = os.path.join(base_dir, data[0][0])
+            if os.path.exists(test_path):
+                print(f"   Verified first image exists")
+            else:
+                print(f"   Warning: First image path does not exist")
     
     # Generate CSV files for each split
     print("\nCreating dataset split files...")
@@ -145,8 +157,6 @@ def main():
     print(f"  - train.csv: {os.path.join(base_dir, 'train.csv')}")
     print(f"  - val.csv: {os.path.join(base_dir, 'val.csv')}")
     print(f"  - test.csv: {os.path.join(base_dir, 'test.csv')}")
-    print("=" * 50)
-
 
 if __name__ == "__main__":
     main()
