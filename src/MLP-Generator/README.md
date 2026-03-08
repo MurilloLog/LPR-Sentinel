@@ -16,22 +16,26 @@ This generator produces synthetic Mexican license plates for all 32 Mexican stat
 - **Progress Tracking**: Visual progress bars for generation monitoring
 
 ## Project Structure
+```
 /MLP-Generator
-|---- /dataset # Created after running generator.py
-| |-- /ags # State-specific folders (Aguascalientes)
-| |-- /bc # Baja California
-| |-- /bcs # Baja California Sur
-| |-- /... # All 32 state folders
-| |-- license_plates_metadata.csv # Complete metadata file
-|---- /fonts # Font files directory
-| |-- NOM-001-SCT-2-2016.ttf # Unofficial license plate font
-|---- /templates # State template images
-| |-- ags.jpg # Template for Aguascalientes
-| |-- bc.jpg # Template for Baja California
-| |-- df.jpg # Template for Ciudad de Mexico
-| |-- ... # Templates for all states
-|---- generator.py # Main generation script
-
+|---- /dataset                # Created after running generator.py
+|     |-- /ags                # State-specific folders (Aguascalientes)
+|     |-- /bc                 # Baja California
+|     |-- /bcs                # Baja California Sur
+|     |-- /...                # All 32 state folders
+|     |-- license_plates_metadata.csv   # Complete metadata file
+|
+|---- /fonts                  # Font files directory
+|     |-- NOM-001-SCT-2-2016.ttf   # Unofficial license plate font
+|
+|---- /templates              # State template images
+|     |-- ags.jpg             # Template for Aguascalientes
+|     |-- bc.jpg              # Template for Baja California
+|     |-- df.jpg              # Template for Ciudad de México
+|     |-- ...                 # Templates for all states
+|
+|---- generator.py            # Main generation script
+```
 
 ## Usage
 Run the script with default parameters:
@@ -58,5 +62,5 @@ generator.generate_variants_with_csv(
 This project is provided for research and educational purposes. The generated data should not be used for fraudulent activities or misrepresentation.
 
 ## References
-- Secretaría de Comunicaciones y Transportes. (2016, 24 de junio). *NORMA Oficial Mexicana NOM-001-SCT-2-2016, Especificaciones de vehículos - Placas metálicas y calcomanías de identificación*. Diario Oficial de la Federación. Recuperado el [Fecha de consulta], de [https://www.dof.gob.mx/normasOficiales.php?codp=6057&view=si](https://www.dof.gob.mx/normasOficiales.php?codp=6057&view=si)
-- Carlos. (2026, 18 de febrero). *Matrículas de coches de México (MEX): guía completa de placas actualizada*. Matriculasdelmundo.com. Recuperado el [Fecha de consulta], de [https://www.matriculasdelmundo.com/mexico.html](https://www.matriculasdelmundo.com/mexico.html)
+- Secretaría de Comunicaciones y Transportes. (2016, 24 de junio). *NORMA Oficial Mexicana NOM-001-SCT-2-2016, Especificaciones de vehículos - Placas metálicas y calcomanías de identificación*. Diario Oficial de la Federación. Retrieved March 8, 2026, from [https://www.dof.gob.mx/normasOficiales.php?codp=6057&view=si](https://www.dof.gob.mx/normasOficiales.php?codp=6057&view=si)
+- Carlos. (2026, 18 de febrero). *Matrículas de coches de México (MEX): guía completa de placas actualizada*. Matriculasdelmundo.com. Retrieved March 8, 2026, from [https://www.matriculasdelmundo.com/mexico.html](https://www.matriculasdelmundo.com/mexico.html)
