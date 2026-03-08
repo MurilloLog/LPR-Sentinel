@@ -655,26 +655,26 @@ def main():
         # Initialize generator with required paths
         # Note: Ensure these files exist in the specified locations
         generator = LicensePlateGenerator(
-            font_path="font/NOM-001-SCT-2-2016.ttf", # Path to license plate font
-            template_dir="templates" # Directory with state templates
+            font_path = "font/NOM-001-SCT-2-2016.ttf", # Path to license plate font
+            template_dir = "templates" # Directory with state templates
         )
         
         # Generate complete dataset for all states
         # This creates N images per state with full metadata
-        N = 3
+        N = 250
         generator.generate_variants_with_csv(
-            num_variants=N, # Images per state
-            output_dir="dataset", # Output directory
-            csv_filename="license_plates_metadata.csv" # Metadata file
+            num_variants = N, # Images per state
+            output_dir = "dataset", # Output directory
+            csv_filename = "license_plates_metadata.csv" # Metadata file
         )
         
         # Alternative for testing: 
         # Generator for specific states with fewer variants
         # generator.generate_variants_with_csv(
-        #     num_variants=50,
-        #     states=["ags", "bc", "chih", "df", "jal", "mex", "nl", "ver"],
-        #     output_dir="dataset_reduced",
-        #     csv_filename="metadata_reduced.csv"
+        #     num_variants = 50,
+        #     states = ["ags", "bc", "chih", "df", "jal", "mex", "nl", "ver"],
+        #     output_dir = "dataset_reduced",
+        #     csv_filename = "metadata_reduced.csv"
         # )
         
     except FileNotFoundError as e:
