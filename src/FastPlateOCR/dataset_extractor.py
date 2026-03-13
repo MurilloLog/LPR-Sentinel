@@ -186,9 +186,9 @@ def main():
     print("CREATING CSV FILES")
     print("=" * 50)
     
-    write_csv("./data/train.csv", train_annotations, "train")
-    write_csv("./data/val.csv", val_annotations, "val")
-    write_csv("./data/test.csv", test_annotations, "test")
+    write_csv("train.csv", train_annotations, "train")
+    write_csv("val.csv", val_annotations, "val")
+    write_csv("test.csv", test_annotations, "test")
     
     # Print summary
     print("\n" + "=" * 50)
@@ -203,9 +203,9 @@ def main():
     print(f"  - Validation images: {val_dir}")
     print(f"  - Test images: {test_dir}")
     print("\nOutput files:")
-    print(f"  - train.csv: {os.path.join(base_dir, './data/train.csv')}")
-    print(f"  - val.csv: {os.path.join(base_dir, './data/val.csv')}")
-    print(f"  - test.csv: {os.path.join(base_dir, './data/test.csv')}")
+    print(f"  - train.csv: {os.path.join(base_dir, 'train.csv')}")
+    print(f"  - val.csv: {os.path.join(base_dir, 'val.csv')}")
+    print(f"  - test.csv: {os.path.join(base_dir, 'test.csv')}")
 
 if __name__ == "__main__":
     main()
