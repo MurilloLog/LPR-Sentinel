@@ -27,13 +27,21 @@ fast-plate-ocr train --model-config-file ./models/cct_s_v1_model_config.yaml --p
 ```
 
 ### Validating a Trained OCR Model
-fast-plate-ocr valid --model ./trained_models/2026-03-08_14-18-10/last.keras --plate-config-file ./config/plate_config.yaml --annotations ./data/val.csv
+fast-plate-ocr valid --model ./trained_models/2026-03-13_13-53-22/ckpt-epoch_71-acc_0.979.keras --plate-config-file ./config/plate_config.yaml --annotations test.csv
 
+23200/23200: 1475s 64ms/step - cat_acc: 0.9952 - loss: 0.1055 - 
+plate_acc: 0.9732 - plate_len_acc: 0.9999 - top_3_k: 0.9973
+
+23200/23200: 1349s 58ms/step - cat_acc: 0.9959 - loss: 0.1028 - plate_acc: 0.9778 - plate_len_acc: 1.0000 - top_3_k: 0.9977
+## Inference engine ONNX
+pip install fast-plate-ocr[onnx-gpu]
+pip install fast-plate-ocr[onnx]
+pip install onnxscript onnx onnxruntime
 
 ### Exporting a Trained OCR Model
 - Export to ONNX
 
-fast-plate-ocr export --model trained_models/2026-03-08_14-18-10/last.keras --plate-config-file config/plate_config.yaml --format onnx --save-dir ./trained_models
+!fast-plate-ocr export --model trained_models/2026-03-13_13-53-22/ckpt-epoch_71-acc_0.979.keras --plate-config-file config/plate_config.yaml --format onnx 
 
 
 - Export to TFLite
