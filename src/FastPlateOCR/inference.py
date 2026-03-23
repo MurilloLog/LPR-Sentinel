@@ -1,12 +1,13 @@
 """
-Módulo de inferencia para reconocimiento de placas vehiculares.
+Modulo de inferencia para reconocimiento de placas vehiculares.
 
-Este módulo proporciona funcionalidades para cargar un modelo entrenado de reconocimiento
-de placas y realizar inferencias sobre imágenes, incluyendo diagnóstico de diferentes
-estrategias de normalización.
+Este modulo proporciona funcionalidades para cargar un modelo entrenado de reconocimiento
+de placas y realizar inferencias sobre imagenes, incluyendo diagnostico de diferentes
+estrategias de normalizacion.
 """
 
 import os
+import argparse
 import cv2
 import numpy as np
 import yaml
@@ -24,7 +25,7 @@ from fast_plate_ocr.train.model.layers import (
 
 
 # -----------------------------------------------------------------------------
-# Constantes de configuración
+# Constantes de configuracion
 # -----------------------------------------------------------------------------
 
 MODEL_PATH = "trained_models/2026-03-13_13-53-22/ckpt-epoch_71-acc_0.979.keras"
@@ -42,22 +43,22 @@ CUSTOM_OBJECTS = {
 
 
 # -----------------------------------------------------------------------------
-# Funciones de configuración
+# Funciones de configuracion
 # -----------------------------------------------------------------------------
 
 def load_plate_config(config_path):
     """
-    Carga la configuración de placas desde un archivo YAML.
+    Carga la configuracion de placas desde un archivo YAML.
 
-    Parámetros
+    Parametros
     ----------
     config_path : str
-        Ruta al archivo de configuración YAML.
+        Ruta al archivo de configuracion YAML.
 
     Retorna
     -------
     dict
-        Diccionario con los parámetros de configuración.
+        Diccionario con los parametros de configuracion.
     """
     with open(config_path, 'r') as f:
         config = yaml.safe_load(f)
@@ -75,21 +76,21 @@ def load_plate_config(config_path):
 
 
 # -----------------------------------------------------------------------------
-# Preprocesamiento de imágenes
+# Preprocesamiento de imagenes
 # -----------------------------------------------------------------------------
 
 def preprocess_image(img_path, config, normalization='minmax'):
     """
     Preprocesa una imagen para ser utilizada como entrada del modelo.
 
-    Parámetros
+    Parametros
     ----------
     img_path : str
         Ruta a la imagen a procesar.
     config : dict
-        Diccionario de configuración con parámetros de preprocesamiento.
+        Diccionario de configuracion con parametros de preprocesamiento.
     normalization : str, opcional
-        Tipo de normalización a aplicar. Opciones: 'minmax' (0-1), 'std' (0-255), 'none'.
+        Tipo de normalizacion a aplicar. Opciones: 'minmax' (0-1), 'std' (0-255), 'none'.
         Por defecto 'minmax'.
 
     Retorna
@@ -104,7 +105,7 @@ def preprocess_image(img_path, config, normalization='minmax'):
     """
     img = cv2.imread(img_path)
     if img is None:
-        raise FileNotFoundError(f"No se encontró la imagen: {img_path}")
+        raise FileNotFoundError(f"No se encontro la imagen: {img_path}")
 
     if config['image_color_mode'] == 'grayscale':
         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -163,9 +164,9 @@ def preprocess_image(img_path, config, normalization='minmax'):
 
 def apply_softmax(logits):
     """
-    Aplica la función softmax a los logits para obtener probabilidades.
+    Aplica la funcion softmax a los logits para obtener probabilidades.
 
-    Parámetros
+    Parametros
     ----------
     logits : np.ndarray
         Matriz de logits de entrada.
@@ -183,7 +184,7 @@ def decode_prediction(predictions, alphabet):
     """
     Decodifica la salida del modelo a texto legible.
 
-    Parámetros
+    Parametros
     ----------
     predictions : np.ndarray
         Predicciones del modelo con forma (batch, sequence, vocab_size).
@@ -193,7 +194,7 @@ def decode_prediction(predictions, alphabet):
     Retorna
     -------
     tuple
-        Tupla que contiene (texto_decodificado, lista_confianzas, índices_predichos, probabilidades).
+        Tupla que contiene (texto_decodificado, lista_confianzas, indices_predichos, probabilidades).
     """
     probs = apply_softmax(predictions[0])
     pred_indices = np.argmax(probs, axis=-1)
@@ -213,19 +214,19 @@ def decode_prediction(predictions, alphabet):
 
 
 # -----------------------------------------------------------------------------
-# Funciones de diagnóstico
+# Funciones de diagnostico
 # -----------------------------------------------------------------------------
 
 def test_normalizations(test_image, config, model, alphabet):
     """
-    Prueba diferentes tipos de normalización para determinar la más adecuada.
+    Prueba diferentes tipos de normalizacion para determinar la mas adecuada.
 
-    Parámetros
+    Parametros
     ----------
     test_image : str
         Ruta a la imagen de prueba.
     config : dict
-        Diccionario de configuración.
+        Diccionario de configuracion.
     model : keras.Model
         Modelo cargado para inferencia.
     alphabet : str
@@ -234,20 +235,20 @@ def test_normalizations(test_image, config, model, alphabet):
     Retorna
     -------
     tuple
-        Tupla que contiene (mejor_normalización, mejor_resultado).
+        Tupla que contiene (mejor_normalizacion, mejor_resultado).
     """
     normalizations = ['minmax', 'std', 'none']
     best_confidence = 0
     best_result = None
     best_norm = None
 
-    print("\n" + "=" * 70)
-    print("PROBANDO DIFERENTES NORMALIZACIONES")
-    print("=" * 70)
+    #print("\n" + "=" * 70)
+    #print("PROBANDO DIFERENTES NORMALIZACIONES")
+    #print("=" * 70)
 
     for norm in normalizations:
-        print(f"\nProbando normalización: {norm}")
-        print("-" * 50)
+        #print(f"\nProbando normalizacion: {norm}")
+        #print("-" * 50)
 
         try:
             img_processed = preprocess_image(test_image, config, normalization=norm)
@@ -256,10 +257,10 @@ def test_normalizations(test_image, config, model, alphabet):
             plate_text, confidences, pred_indices, probs = decode_prediction(predictions, alphabet)
             avg_confidence = np.mean(confidences)
 
-            print(f"  Placa: {plate_text}")
-            print(f"  Confianza promedio: {avg_confidence:.4f}")
-            print(f"  Rango de probabilidades: [{np.min(probs):.4f}, {np.max(probs):.4f}]")
-            print(f"  Distribución: max prob={np.max(probs):.4f}, min prob={np.min(probs):.4f}")
+            #print(f"  Placa: {plate_text}")
+            #print(f"  Confianza promedio: {avg_confidence:.4f}")
+            #print(f"  Rango de probabilidades: [{np.min(probs):.4f}, {np.max(probs):.4f}]")
+            #print(f"  Distribucion: max prob={np.max(probs):.4f}, min prob={np.min(probs):.4f}")
 
             if avg_confidence > best_confidence:
                 best_confidence = avg_confidence
@@ -274,9 +275,9 @@ def test_normalizations(test_image, config, model, alphabet):
 
 def inspect_model_input(model):
     """
-    Inspecciona la estructura del modelo para identificar capas de normalización.
+    Inspecciona la estructura del modelo para identificar capas de normalizacion.
 
-    Parámetros
+    Parametros
     ----------
     model : keras.Model
         Modelo a inspeccionar.
@@ -286,13 +287,13 @@ def inspect_model_input(model):
     tuple
         Tupla que contiene (tiene_batch_norm, tiene_rescaling).
     """
-    print("\n" + "=" * 70)
-    print("INSPECCIONANDO MODELO")
-    print("=" * 70)
+    #print("\n" + "=" * 70)
+    #print("INSPECCIONANDO MODELO")
+    #print("=" * 70)
 
     first_layer = model.layers[0]
-    print(f"Primera capa: {first_layer.name}")
-    print(f"Tipo: {type(first_layer).__name__}")
+    #print(f"Primera capa: {first_layer.name}")
+    #print(f"Tipo: {type(first_layer).__name__}")
 
     if hasattr(first_layer, 'batch_input_shape'):
         print(f"Input shape esperado: {first_layer.batch_input_shape}")
@@ -303,10 +304,10 @@ def inspect_model_input(model):
     for layer in model.layers:
         if 'BatchNormalization' in str(type(layer)):
             has_batch_norm = True
-            print(f"  Capa BatchNormalization encontrada: {layer.name}")
+            #print(f"  Capa BatchNormalization encontrada: {layer.name}")
         if 'Rescaling' in str(type(layer)):
             has_rescaling = True
-            print(f"  Capa Rescaling encontrada: {layer.name}")
+            #print(f"  Capa Rescaling encontrada: {layer.name}")
 
     if has_batch_norm:
         print("\nEl modelo tiene BatchNormalization, lo que sugiere que espera valores normalizados.")
@@ -319,35 +320,35 @@ def inspect_model_input(model):
 # -----------------------------------------------------------------------------
 # Punto de entrada principal
 # -----------------------------------------------------------------------------
-
+# Run as: python .\inference.py --input_dir ./140x70_dataset/val/"xxxxx.jpg"
 if __name__ == "__main__":
-    test_image = "test2.jpg"
-
-    print("=" * 70)
-    print("DIAGNÓSTICO DE INFERENCIA")
-    print("=" * 70)
+    parser = argparse.ArgumentParser(description='FastPlateOCR inferencer')
+    parser.add_argument('--input_dir', type=str, required=True, help='Imagen de entrada')  # argumento posicional
+    args = parser.parse_args()
+    test_image = args.input_dir
+    #test_image = "test2.jpg"
 
     try:
-        print("\n[1/5] Cargando configuración...")
+        #print("\n[1/5] Cargando configuracion...")
         config = load_plate_config(PLATE_CONFIG_PATH)
         alphabet = config['alphabet']
 
-        print(f"  - Alphabet ({len(alphabet)} chars)")
-        print(f"  - Max slots: {config['max_plate_slots']}")
-        print(f"  - Image size: {config['img_height']}x{config['img_width']}")
+        #print(f"  - Alphabet ({len(alphabet)} chars)")
+        #print(f"  - Max slots: {config['max_plate_slots']}")
+        #print(f"  - Image size: {config['img_height']}x{config['img_width']}")
 
-        print("\n[2/5] Cargando modelo...")
+        #print("\n[2/5] Cargando modelo...")
         model = keras.models.load_model(
             MODEL_PATH,
             compile=False,
             custom_objects=CUSTOM_OBJECTS
         )
-        print(f"  - Output shape: {model.output_shape}")
+        #print(f"  - Output shape: {model.output_shape}")
 
-        print("\n[3/5] Inspeccionando modelo...")
+        #print("\n[3/5] Inspeccionando modelo...")
         has_batch_norm, has_rescaling = inspect_model_input(model)
 
-        print("\n[4/5] Probando diferentes normalizaciones...")
+        #print("\n[4/5] Probando diferentes normalizaciones...")
         best_norm, best_result = test_normalizations(
             test_image,
             config,
@@ -355,24 +356,24 @@ if __name__ == "__main__":
             alphabet
         )
 
-        print("\n[5/5] Mostrando mejor resultado...")
+        #print("\n[5/5] Mostrando mejor resultado...")
         if best_result:
             plate_text, confidences, pred_indices, probs = best_result
 
-            print("\n" + "=" * 70)
-            print("MEJOR RESULTADO")
-            print("=" * 70)
-            print(f"Normalización utilizada: {best_norm}")
+            #print("\n" + "=" * 70)
+            #print("MEJOR RESULTADO")
+            #print("=" * 70)
+            #print(f"Normalizacion utilizada: {best_norm}")
             print(f"Placa detectada: {plate_text}")
             print(f"Confianza promedio: {np.mean(confidences):.4f}")
 
-            if np.mean(confidences) > 0.5:
-                print("\nLa confianza es aceptable. La predicción es confiable.")
+            if np.mean(confidences) > 0.75:
+                print("\nLa confianza es aceptable. La prediccion es confiable.")
             else:
                 print("\nLa confianza sigue siendo baja. Posibles causas:")
                 print("   1. La imagen de prueba no es representativa del dataset de entrenamiento")
-                print("   2. El modelo necesita ser re-entrenado con más datos")
-                print("   3. La imagen tiene mala calidad o está mal enfocada")
+                print("   2. El modelo necesita ser re-entrenado con mas datos")
+                print("   3. La imagen tiene mala calidad o esta mal enfocada")
                 print("   4. El modelo puede estar esperando un preprocesamiento adicional")
 
             '''expected = "AAD-382-F"
@@ -383,7 +384,7 @@ if __name__ == "__main__":
             else:
                 print("No coincide con la esperada")
 
-                print("\nVerificando si la placa esperada está entre las predicciones:")
+                print("\nVerificando si la placa esperada esta entre las predicciones:")
                 for slot, expected_char in enumerate(expected):
                     if slot < len(probs):
                         expected_idx = alphabet.find(expected_char)
@@ -394,9 +395,9 @@ if __name__ == "__main__":
                             top3_indices = np.argsort(probs[slot])[-3:][::-1]
                             top3_chars = [alphabet[i] for i in top3_indices]
                             if expected_char in top3_chars:
-                                print(f"    Está en top-3: {top3_chars}")
+                                print(f"    Esta en top-3: {top3_chars}")
                             else:
-                                print(f"    No está en top-3: {top3_chars}")
+                                print(f"    No esta en top-3: {top3_chars}")
 
         print("\n" + "=" * 70)'''
 
