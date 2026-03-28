@@ -210,3 +210,4 @@ __marimo__/
 src/MLP-Generator/dataset
 src/MLP-Augmentator/augmented_dataset
 src/FastPlateOCR/140x70_dataset
+src/YOLO-v9-s/inputs
