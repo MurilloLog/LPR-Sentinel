@@ -1,0 +1,84 @@
+\documentclass[lettersize,journal]{IEEEtran}
+\usepackage{amsmath,amsfonts}
+\usepackage{algorithmic}
+\usepackage{algorithm}
+\usepackage{array}
+\usepackage[caption=false,font=normalsize,labelfont=sf,textfont=sf]{subfig}
+\usepackage{textcomp}
+\usepackage{stfloats}
+\usepackage{url}
+\usepackage{verbatim}
+\usepackage{graphicx}
+\usepackage{cite}
+\hyphenation{op-tical net-works semi-conduc-tor IEEE-Xplore}
+% updated with editorial comments 8/9/2021
+
+\begin{document}
+
+\title{LPR-Sentinel: A High-Speed Neural Vision System for Mexican Licence Plate Recognition}
+
+\author{Gustavo Adolfo Murillo Gutierrez}
+
+% The paper headers
+\markboth{Programación y Sistemas Inteligentes para Seguridad 2026, Concurso de Innovación Tecnológica Hola Mundo, Mayo~2026}%
+{Shell \MakeLowercase{\textit{et al.}}: A Sample Article Using IEEEtran.cls for IEEE Journals}
+
+\IEEEpubid{Concurso de Innovación Tecnológica Hola Mundo~\copyright~2026 TENAXES}
+% Remember, if you use this you must call \IEEEpubidadjcol in the second
+% column for its text to clear the IEEEpubid mark.
+
+\maketitle
+
+\begin{abstract}
+This document describes the most common article elements and how to use the IEEEtran class with \LaTeX \ to produce files that are suitable for submission to the IEEE.  IEEEtran can produce conference, journal, and technical note (correspondence) papers with a suitable choice of class options. 
+\end{abstract}
+
+\begin{IEEEkeywords}
+Article submission, IEEE, IEEEtran, journal, \LaTeX, paper, template, typesetting.
+\end{IEEEkeywords}
+
+\section{Introducción}
+\IEEEPARstart{U}{n} sistema LPR (Licence Plate Recognition) reconoce el número de placa vehícular de una imagen capturada con una cámara a color, B/W o infrarroja. Su reconocimiento se consigue con la combinación de distintas técnicas \cite{du-ibrahim2013}.
+
+\section{Implementación del sistema}
+\subsection{Entorno de desarrollo}
+Como entorno de desarrollo se ha optado por utilizar una Raspberry Pi modelo 4b con 4GB de memoria RAM y 220GB de almacenamiento SSD. Al dispositivo se le ha instalado el sistema operativo RaspberryPi OS Lite (64 bits) y ha sido configurado para manipularse por SSH a través de una red local. Se contempla que este equipo se encargue de procesar el sistema LPR de forma exclusiva pero reducir el consumo de recursos externos (UI, periféricos, aplicaciones en segundo plano, etc). Sin embargo, al instalar la versión base (Lite) es indispensable configurar el entorno instalando los siguientes paquetes:
+
+\begin{enumerate}
+    \item sudo apt update \&\& sudo apt full-upgrade -y; para verificar que el sistema operativo se encuentra completamente actualizado.
+    \item sudo apt install -y python3-pip python3-setuptools build-essential; para disponer de las herramientas de compilación, interpretación y desarrollo en general.
+\end{enumerate}
+
+\subsection{Clonación del repositorio}
+Para agilizar el desarrollo y reproducibilidad del sistema, LPR-Sentinel ha sido alojado en Github. Para clonarlo se debe emplear el comando git clone. En caso de ser la primera vez empleando 
+%\begin{figure}[!t]
+%\centering
+%\includegraphics[width=2.5in]{fig1}
+%\caption{Simulation results for the network.}
+%\label{fig_1}
+%\end{figure}
+
+
+%
+\begin{comment}
+\begin{figure*}[!t]
+\centering
+\subfloat[]{\includegraphics[width=2.5in]{fig1}%
+\label{fig_first_case}}
+\hfil
+\subfloat[]{\includegraphics[width=2.5in]{fig1}%
+\label{fig_second_case}}
+\caption{Dae. Ad quatur autat ut porepel itemoles dolor autem fuga. Bus quia con nessunti as remo di quatus non perum que nimus. (a) Case I. (b) Case II.}
+\label{fig_sim}
+\end{figure*}
+\end{comment}
+
+\bibliographystyle{IEEEtran}
+\bibliography{references.bib}
+
+\begin{IEEEbiography}[{\includegraphics[width=1in,height=1.25in,clip,keepaspectratio]{figures/Biography/Biography.jpg}}]{Gustavo Murillo} recibió el grado de M.Sc. en Ingeniería Eléctrica con el distintivo \textit{Cum Laude}. Actualmente se desempeña como investigador en el área de \textbf{Visión por Computadora}, \textbf{Procesamiento de Señales} e \textbf{Interfaces Humano-Máquina (HMI)} bajo entornos de \textbf{Realidad Extendida (XR)}. Sus intereses de investigación incluyen el procesamiento de \textbf{neuroseñales y datos biomédicos}, con énfasis en aplicaciones de interacción en tiempo real y gemelos digitales centrados en el ser humano.
+\end{IEEEbiography}
+
+\end{document}
+
+
