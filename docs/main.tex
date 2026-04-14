@@ -40,67 +40,53 @@ El reconocimiento automático de matrículas vehiculares (LPR) se ha convertido 
 
 %region keywords
 \begin{IEEEkeywords}
-Reconocimiento automático de placas mexicanas, LPR, datos sintéticos, YOLOv11s, Compact Convolutional Transformer, ONNX, Raspberry Pi, NOM-001-SCT-2-2016.
+Reconocimiento automático de placas mexicanas, LPR, datos sintéticos, YOLOv11s, FastPlateOCR, ONNX, Raspberry Pi 4B, NOM-001-SCT-2-2016.
 \end{IEEEkeywords}
 %endregion
 
 %region Introduccion
 \section{Introducción}
-\IEEEPARstart{E}{l} reconocimiento automático de matrículas vehiculares, conocido por sus siglas en inglés LPR (\textit{License Plate Recognition}) o ALPR (\textit{Automatic License Plate Recognition}), constituye una tecnología fundamental dentro del ecosistema de sistemas inteligentes de transporte y videovigilancia. Su objetivo principal consiste en extraer la cadena alfanumérica que identifica a un vehículo a partir de una imagen capturada por una cámara convencional (color, blanco y negro o infrarroja), combinando para ello técnicas de detección de objetos, procesamiento digital de imágenes y reconocimiento óptico de caracteres (OCR) \cite{du-ibrahim2013}. Las aplicaciones de esta tecnología abarcan desde el control de acceso a estacionamientos y peajes automáticos hasta la verificación vehicular por parte de cuerpos de seguridad, pasando por sistemas de gestión de tráfico y cobro electrónico de infracciones.
+\IEEEPARstart{E}{l} reconocimiento automático de matrículas vehiculares, conocido por sus siglas en inglés LPR (\textit{License Plate Recognition}) o ALPR (\textit{Automatic License Plate Recognition}), constituye una tecnología fundamental dentro del ecosistema de sistemas inteligentes de transporte y videovigilancia. Su objetivo principal consiste en extraer la cadena alfanumérica que identifica a un vehículo a partir de una imagen capturada por una cámara convencional (color, blanco y negro o infrarroja), combinando para ello técnicas de detección de objetos, procesamiento digital de imágenes y reconocimiento óptico de caracteres (OCR). Las aplicaciones de esta tecnología abarcan desde el control de acceso a estacionamientos y peajes automáticos hasta la verificación vehicular por parte de cuerpos de seguridad, pasando por sistemas de gestión de tráfico y cobro electrónico de infracciones.
 
-A pesar de los avances significativos logrados en las últimas décadas gracias a la irrupción de las redes neuronales profundas y los modelos basados en transformadores, el desarrollo de sistemas LPR robustos sigue enfrentando desafíos sustanciales. La variabilidad de las condiciones de captura (iluminación cambiante, ángulos de visión extremos, climatología adversa), la diversidad de diseños y formatos de matrículas entre distintas jurisdicciones, y las restricciones legales y éticas asociadas al uso de imágenes reales de vehículos y sus propietarios constituyen barreras que dificultan la obtención de conjuntos de datos suficientemente grandes y diversos para entrenar modelos generalizables. En el caso particular de México, esta problemática se ve agravada por la existencia de 32 entidades federativas, cada una con libertad para emplear combinaciones de colores, tipografías y elementos de seguridad personalizados, siempre que respeten la Norma Oficial Mexicana NOM-001-SCT-2-2016 \cite{NOM001SCT22016} en cuanto a dimensiones, zonas de seguridad y caracteres obligatorios. Esta heterogeneidad, sumada a la ausencia de bases de datos públicas etiquetadas que reflejen dicha diversidad, limita severamente la capacidad de investigación y desarrollo en el ámbito del reconocimiento de matrículas mexicanas.
+A pesar de los avances significativos logrados en las últimas décadas gracias a la popularidad de las redes neuronales profundas y los modelos basados en transformadores (Vision Transformer), el desarrollo de sistemas LPR robustos sigue enfrentando desafíos sustanciales. La variabilidad de las condiciones de captura (iluminación cambiante, ángulos de visión extremos, climatología adversa), la diversidad de diseños y formatos de matrículas entre distintas jurisdicciones, y las restricciones legales y éticas asociadas al uso de imágenes reales de vehículos y sus propietarios constituyen barreras que dificultan la obtención de conjuntos de datos suficientemente grandes y diversos para entrenar modelos generalizables. En el caso particular de México, esta problemática se ve agravada por la existencia de 32 entidades federativas, cada una con libertad para emplear combinaciones de colores, tipografías y elementos de seguridad personalizados, siempre que respeten la Norma Oficial Mexicana NOM-001-SCT-2-2016 \cite{NOM001SCT22016} en cuanto a dimensiones, zonas de seguridad y caracteres obligatorios. Esta heterogeneidad, sumada a la ausencia de bases de datos públicas etiquetadas que reflejen dicha diversidad, limita severamente la capacidad de investigación y desarrollo en el ámbito del reconocimiento de matrículas mexicanas.
 
-El presente trabajo aborda estas limitaciones mediante la propuesta, implementación y evaluación de un sistema completo de generación sintética, aumentación, detección y reconocimiento de matrículas vehiculares mexicanas, denominado LPR-Sentinel. El sistema se articula en torno a cinco módulos funcionales que operan de manera coordinada: MLP-Generator, responsable de la generación procedimental de matrículas sintéticas conforme a la normativa oficial; MLP-Augmentator, encargado de aplicar transformaciones geométricas, degradaciones ópticas y ajustes fotométricos para simular condiciones reales de captura; MLP-Detector, que implementa un modelo YOLO para localizar la región de la placa dentro de imágenes de escena completa; MLP-Recognizer, que emplea una arquitectura Compact Convolutional Transformer (CCT) para traducir la región detectada a texto; y MLP-Pipeline, que orquesta la integración de todos los componentes anteriores junto con una base de datos SQLite que almacena información vehicular asociada. La Figura \ref{fig:pipeline} ilustra la arquitectura general del sistema y el flujo de datos entre sus módulos constituyentes.
+En este trabajo se abordan estas limitaciones mediante la propuesta, implementación y evaluación de un sistema completo de generación sintética, aumentación, detección y reconocimiento de matrículas vehiculares mexicanas, denominado LPR-Sentinel. El sistema se integra por cinco módulos funcionales que operan de manera coordinada: MLP-Generator, responsable de la generación procedimental de matrículas sintéticas conforme a la normativa oficial, MLP-Augmentator, encargado de aplicar transformaciones geométricas, MLP-Detector, que implementa un modelo YOLO para localizar la región de la placa dentro de imágenes de escena completa, MLP-Recognizer, que emplea una arquitectura Compact Convolutional Transformer (CCT) para traducir la región detectada a texto y MLP-Pipeline, que permite la integración de todos los componentes anteriores junto con una base de datos SQLite que almacena información vehicular asociada. La Figura \ref{fig_pipeline} ilustra la arquitectura general del sistema y el flujo de datos entre sus módulos constituyentes.
 
 \begin{figure}[h]
 \centering
 % \includegraphics[width=0.85\textwidth]{figures/lpr_sentinel_pipeline.png}
-\caption{Arquitectura general del sistema LPR-Sentinel. Las imágenes de entrada son procesadas secuencialmente por el módulo de detección (YOLO), que localiza la región de la matrícula; dicha región es entonces recortada y enviada al módulo de reconocimiento (CCT), que extrae la cadena alfanumérica; finalmente, el texto reconocido es consultado en una base de datos SQLite que retorna la información asociada al vehículo y su propietario. Los módulos de generación y aumentación de datos (no mostrados en el flujo de inferencia) proveen los conjuntos de entrenamiento para ambos modelos.}
-\label{fig:pipeline}
+\caption{Arquitectura general del sistema LPR-Sentinel. Las imágenes de entrada son procesadas secuencialmente por el módulo de detección (YOLO), que localiza la región de la matrícula; dicha región es entonces recortada y enviada al módulo de reconocimiento (FastPlateOCR), que extrae la cadena alfanumérica. Finalmente, el texto reconocido es consultado en una base de datos SQLite que retorna la información asociada al vehículo y su propietario. Los módulos de generación y aumentación de datos (no mostrados en el flujo de inferencia) proveen los conjuntos de entrenamiento para ambos modelos.}
+\label{fig_pipeline}
 \end{figure}
 
-Una de las contribuciones más relevantes de este trabajo radica en la adopción del formato ONNX (\textit{Open Neural Network Exchange}) como interfaz unificada de despliegue tanto para el detector como para el reconocedor. Esta decisión permite desacoplar la fase de entrenamiento, realizada en entornos de escritorio con frameworks como TensorFlow y PyTorch, de la fase de inferencia, ejecutada en dispositivos de bajo consumo como la Raspberry Pi 4B que constituye el hardware objetivo del sistema. La portabilidad y eficiencia que ofrece ONNX resultan esenciales para aplicaciones embebidas donde los recursos computacionales (memoria RAM, capacidad de procesamiento, consumo energético) son limitados, pero se exige una latencia reducida típicamente inferior a los 200 milisegundos por imagen.
+Una de las contribuciones más relevantes de este trabajo radica en la adopción del formato ONNX (\textit{Open Neural Network Exchange}) como interfaz unificada de despliegue tanto para el detector como para el reconocedor. Esta decisión permite desacoplar la fase de entrenamiento, realizada en entornos de escritorio con frameworks como TensorFlow y PyTorch, de la fase de inferencia, ejecutada en dispositivos de bajo consumo como la Raspberry Pi 4B que constituye el hardware objetivo del sistema.
 
-El desarrollo del sistema ha sido guiado por principios de reproducibilidad científica y facilidad de despliegue. Todo el código fuente ha sido alojado en un repositorio público de GitHub, y se han proporcionado instrucciones detalladas para la clonación, configuración del entorno e instalación de dependencias en sistemas operativos basados en Linux, incluyendo la versión Lite de Raspberry Pi OS. El presente artículo se estructura de la siguiente manera: la Sección II describe el entorno de desarrollo y los requisitos hardware y software del sistema; la Sección III presenta en detalle cada uno de los cinco módulos que componen LPR-Sentinel; la Sección IV expone los experimentos realizados para validar el rendimiento del sistema, incluyendo métricas de detección, precisión del reconocedor y latencia de inferencia; la Sección V discute los resultados obtenidos en comparación con trabajos previos; y finalmente, la Sección VI presenta las conclusiones y líneas de trabajo futuro.
+El desarrollo de la propuesta ha sido guiado por principios de reproducibilidad científica y facilidad de despliegue. Todo el código fuente ha sido alojado en un repositorio público de GitHub, y se han proporcionado instrucciones detalladas para la clonación, configuración del entorno e instalación de dependencias en sistemas operativos basados en Linux, incluyendo la versión Lite de Raspberry Pi OS. El presente artículo se estructura de la siguiente manera: la Sección II describe el entorno de desarrollo y los requisitos hardware y software del sistema. La Sección III presenta en detalle cada uno de los cinco módulos que componen LPR-Sentinel. La Sección IV expone los experimentos realizados para validar el rendimiento del sistema, incluyendo métricas de detección, precisión del reconocedor y latencia de inferencia. La Sección V discute los resultados obtenidos en comparación con trabajos previos. Y finalmente, la Sección VI presenta las conclusiones y líneas de trabajo futuro.
+%endregion
 
-\section{Implementación del sistema}
-
-\subsection{Entorno de desarrollo}
-
-Como entorno de desarrollo y plataforma objetivo para el despliegue del sistema LPR-Sentinel se ha optado por utilizar una Raspberry Pi modelo 4B con 4 GB de memoria RAM y 220 GB de almacenamiento SSD. Este dispositivo de bajo costo y reducido consumo energético (típicamente inferior a 5 vatios en condiciones de carga media) representa un equilibrio adecuado entre capacidad computacional y eficiencia, siendo ampliamente empleado en aplicaciones de visión artificial embebida, videovigilancia distribuida y sistemas IoT (\textit{Internet of Things}). A la Raspberry Pi se le ha instalado el sistema operativo Raspberry Pi OS Lite (64 bits), una versión minimalista sin interfaz gráfica que reduce al mínimo el consumo de recursos del sistema y permite dedicar la mayor parte de la capacidad de procesamiento a las tareas de inferencia de los modelos ONNX. El dispositivo ha sido configurado para ser manipulado exclusivamente por SSH a través de una red local, eliminando así la sobrecarga asociada a periféricos de entrada/salida, aplicaciones en segundo plano o servicios no esenciales. La Figura \ref{fig:raspberry_setup} muestra el esquema de conexión del dispositivo dentro de la red de prueba.
+%region Entorno de desarrollo
+\section{Entorno de desarrollo}
+Como entorno de desarrollo y plataforma objetivo para el despliegue de nuestro sistema se ha optado por utilizar una Raspberry Pi modelo 4B con 4 GB de memoria RAM y 220 GB de almacenamiento SSD. Este dispositivo de bajo costo y reducido consumo energético (típicamente inferior a 5 vatios en condiciones de carga media) representa un equilibrio adecuado entre capacidad computacional y eficiencia, siendo ampliamente empleado en aplicaciones de visión artificial embebida, videovigilancia distribuida y sistemas IoT (\textit{Internet of Things}). A la Raspberry Pi se le ha instalado el sistema operativo Raspberry Pi OS Lite (64 bits), una versión minimalista sin interfaz gráfica que reduce al mínimo el consumo de recursos del sistema y permite dedicar la mayor parte de la capacidad de procesamiento a las tareas de inferencia de los modelos ONNX, por lo que inicialmente no tiene la capacidad de procesar video en tiempo real. El dispositivo ha sido configurado para ser manipulado exclusivamente por SSH (\textit{Security Shell}) a través de una red local, eliminando así la sobrecarga asociada a periféricos de entrada/salida, aplicaciones en segundo plano o servicios no esenciales. La Figura \ref{fig_raspberry_setup} muestra el esquema de conexión del dispositivo dentro de la red de prueba.
 
 \begin{figure}[h]
 \centering
 % \includegraphics[width=0.6\textwidth]{figures/raspberry_pi_setup.png}
-\caption{Configuración del hardware: una Raspberry Pi 4B conectada a la red local por Ethernet o WiFi, accesible mediante SSH desde una máquina de desarrollo. La cámara (USB o módulo CSI) captura las imágenes de vehículos, las cuales son procesadas localmente en la Raspberry Pi. Los resultados de reconocimiento son registrados en una base de datos SQLite interna o enviados a un servidor remoto mediante peticiones HTTP.}
-\label{fig:raspberry_setup}
+\caption{Configuración del hardware: una Raspberry Pi 4B conectada a la red local por Ethernet/WiFi, accesible mediante SSH desde una máquina de desarrollo. La cámara (USB o módulo CSI) captura las imágenes de vehículos, las cuales son procesadas localmente en la Raspberry Pi. Los resultados de reconocimiento son registrados en una base de datos SQLite interna o enviados a un servidor remoto mediante peticiones HTTP.}
+\label{fig_raspberry_setup}
 \end{figure}
 
 Dado que se ha instalado la versión Lite del sistema operativo, que carece de muchas herramientas de desarrollo preinstaladas, resulta indispensable configurar el entorno manualmente instalando los siguientes paquetes mediante el gestor \texttt{apt}:
 
 \begin{itemize}
-\item \texttt{sudo apt update && sudo apt full-upgrade -y}: este comando actualiza la lista de paquetes disponibles y actualiza todos los paquetes del sistema a sus versiones más recientes, asegurando que se dispone de las correcciones de seguridad y las mejoras de rendimiento más recientes.
-\item \texttt{sudo apt install -y python3-pip python3-setuptools build-essential}: esta instrucción instala el gestor de paquetes de Python (pip), las herramientas para empaquetado de módulos Python (\texttt{setuptools}) y el conjunto de compiladores esenciales (gcc, g++, make) necesarios para compilar aquellas dependencias que no se distribuyen como binarios precompilados para arquitectura ARM64, como ciertas bibliotecas de procesamiento de imágenes y aprendizaje automático.
+    \item \texttt{sudo apt update \&\& sudo apt full-upgrade -y}: este comando actualiza la lista de paquetes disponibles y actualiza todos los paquetes del sistema a sus versiones más recientes, asegurando que se dispone de las correcciones de seguridad y las mejoras de rendimiento más recientes.
+    \item \texttt{sudo apt install -y python3-pip python3-setuptools build-essential}: esta instrucción instala el gestor de paquetes de Python (pip), las herramientas para empaquetado de módulos Python (\texttt{setuptools}) y el conjunto de compiladores esenciales (gcc, g++, make) necesarios para compilar aquellas dependencias que no se distribuyen como binarios precompilados para arquitectura ARM64, como ciertas bibliotecas de procesamiento de imágenes y aprendizaje automático.
 \end{itemize}
 
 Una vez completada la instalación de los paquetes base, se procede a instalar las dependencias específicas del proyecto, que incluyen \texttt{opencv-python} para el procesamiento de imágenes, \texttt{onnxruntime} para la ejecución de los modelos ONNX, \texttt{numpy} para operaciones numéricas, \texttt{PyYAML} para la carga de archivos de configuración, \texttt{imutils} para funciones auxiliares de redimensionamiento, y \texttt{pandas} junto con \texttt{sqlite3} para la gestión de la base de datos. La instalación se realiza mediante \texttt{pip3 install -r requirements.txt}, donde el archivo \texttt{requirements.txt} especifica las versiones exactas de cada dependencia para garantizar la reproducibilidad del entorno.
 
-\subsection{Clonación del repositorio y estructura del proyecto}
-
-Para agilizar el desarrollo, facilitar la colaboración y asegurar la reproducibilidad del sistema, el código fuente completo de LPR-Sentinel ha sido alojado en un repositorio público de GitHub. Para clonar el repositorio en el dispositivo de destino, se debe emplear el comando \texttt{git clone https://github.com/username/LPR-Sentinel.git} (la URL definitiva será proporcionada tras la aceptación del artículo). En caso de que sea la primera vez que se emplea Git en la Raspberry Pi, será necesario instalar el paquete correspondiente mediante \texttt{sudo apt install git -y}. La estructura de directorios del proyecto sigue una organización modular que refleja la arquitectura de cinco componentes descrita anteriormente, tal como se muestra en la Figura \ref{fig:repo_structure}.
-
-\begin{figure}[h]
-\centering
-% \includegraphics[width=0.7\textwidth]{figures/repository_structure.png}
-\caption{Estructura de directorios del repositorio LPR-Sentinel. Cada módulo (Generator, Augmentator, Detector, Recognizer, Pipeline) ocupa su propio directorio, con subdirectorios para modelos, configuraciones, scripts de entrenamiento e inferencia. El directorio \texttt{outputs} almacena los resultados de las ejecuciones, mientras que \texttt{database} contiene el archivo SQLite con los registros vehiculares sintéticos.}
-\label{fig:repo_structure}
-\end{figure}
-
-Esta organización modular no solo facilita la navegación por el código, sino que también permite que cada componente pueda ser mejorado o sustituido de manera independiente, siempre que se respeten las interfaces definidas (formatos de entrada y salida). El repositorio incluye además scripts de demostración (\texttt{demo.py}) que ejecutan el pipeline completo sobre imágenes de ejemplo, así como conjuntos de datos sintéticos pregenerados que permiten verificar el funcionamiento del sistema incluso en ausencia de una cámara o de imágenes reales. Las secciones siguientes describen en detalle cada uno de los cinco módulos que constituyen el núcleo técnico de LPR-Sentinel.
-
 %region MLP-Generator
-\section{MLP-Generator}
-MLP-Generator es el motor de generación procedimental de matrículas mexicanas desarrollado conforme a las especificiciones establecidas en la Norma Oficial Mexicana NOM-001-SCT-2-2016 \cite{NOM001SCT22016}. Este módulo representa una de las contribuciones más relevantes del presente trabajo, habiendo sido diseñado con el propósito de crear bases de datos sintéticas que eludan las limitaciones éticas y legales al empleo de datos reales. El funcionamiento de este módulo requiere, en primer término, disponer de las 32 plantillas de matrículas mexicanas, cada una de ellas correspondiente a un diseño actualizado de cada matrícula existente dentro de la república mexicana. Asimismo, se precisa la fuente tipográfica en alto relieve de carácter pseudo-oficial para el grabado de los números de serie, junto con la parametrización del algoritmo destinado a la producción de las series alfanuméricas válidas y sus representaciones virtuales. Como resultado de este proceso, se obtiene, por una parte, un \textit{dataset} sintético compuesto por matrículas ideales y, por otra, una base de datos que alberga información virtual asociada a cada matrícula generada, incluyendo el nombre de usuario, el tipo de vehículo, el estado legal de la matrícula, entre otros atributos.
+\subsection{MLP-Generator}
+MLP-Generator es el motor de generación procedimental de matrículas mexicanas desarrollado conforme a las especificiciones establecidas en la Norma Oficial Mexicana NOM-001-SCT-2-2016. Este módulo representa una de las contribuciones más relevantes del presente trabajo, habiendo sido diseñado con el propósito de crear bases de datos sintéticas que eludan las limitaciones éticas y legales al empleo de datos reales. El funcionamiento de este módulo requiere, en primer término, disponer de las 32 plantillas de matrículas mexicanas, cada una de ellas correspondiente a un diseño actualizado de cada matrícula existente dentro de la república mexicana. Asimismo, se precisa la fuente tipográfica en alto relieve de carácter pseudo-oficial para el grabado de los números de serie, junto con la parametrización del algoritmo destinado a la producción de las series alfanuméricas válidas y sus representaciones virtuales. Como resultado de este proceso, se obtiene, por una parte, un \textit{dataset} sintético compuesto por matrículas ideales y, por otra, una base de datos que alberga información virtual asociada a cada matrícula generada, incluyendo el nombre de usuario, el tipo de vehículo, el estado legal de la matrícula, entre otros atributos.
 
 \subsection{Arquitectura de generación basada en plantillas}
 El diseño del algoritmo opera bajo una arquitectura de generación basada en plantillas (\textit{template-based generation}), tomando como referencia una imagen de $500 \times 246$ píxeles cuyo diseño se ajusta al utilizado por los diferentes estados de México. Cada plantilla ha sido adaptada a partir de la información consultada en la página \cite{matriculas-mexico} y posteriormente limpiada para asegurar el espacio editable correspondiente a la serie de la matrícula. En México, aunque la NOM-001-SCT-2-2016 constituye el estándar que especifica las características físicas y el engomado de cada placa vehicular, cada estado tiene libertad de emplear colores y diseños personalizados siempre que no obstaculicen las zonas clave de la matrícula tal como la norma lo indica. En consecuencia, cada plantilla incorpora ese diseño personalizado único, respetando los espacios destinados a la colocación de los caracteres. El módulo carga entonces cada plantilla singular y, a partir de ella, genera las distintas variantes conforme se requiera o se especifique en la parametrización del algoritmo, donde puede indicarse la cantidad de matrículas a generar por estado de manera global o para entidades específicas, empleando los caracteres disponibles en la norma oficial.
@@ -184,202 +170,11 @@ El entrenamiento se configuró con 50 épocas y un tamaño de imagen de entrada 
 
 La exportación del modelo entrenado al formato ONNX se realiza mediante el script \texttt{exporter.py}, que carga el modelo YOLO desde el archivo \texttt{best.pt} y llama al método \texttt{export} con los argumentos \texttt{format='onnx'} y \texttt{imgsz=640}. Este proceso de conversión realiza varias transformaciones automáticas: elimina las operaciones dinámicas propias de PyTorch que no son compatibles con ONNX, fusiona capas de normalización con capas convolucionales para reducir la latencia, y cuantifica los pesos cuando se especifica, aunque en la configuración actual se mantiene la precisión de 32 bits para preservar la exactitud de las detecciones. El archivo ONNX resultante, también denominado \texttt{best.onnx} en el contexto del despliegue, contiene un grafo computacional estático que puede ser ejecutado por cualquier motor de inferencia compatible, incluyendo ONNX Runtime, OpenCV DNN o TensorRT, este último especialmente optimizado para GPUs NVIDIA.
 
-La inferencia del detector se implementa en el script \texttt{inference_onnx.py}, que demuestra el flujo completo de procesamiento desde la imagen de entrada hasta la extracción de la región de la placa. El proceso comienza con la carga de la imagen mediante OpenCV y el almacenamiento de sus dimensiones originales, información crucial para la posterior transformación inversa de coordenadas. La imagen es redimensionada a 640×640 píxeles, el tamaño esperado por el modelo, y sus píxeles son convertidos al tipo \texttt{float32} y normalizados al rango 
-[
-0
-,
-1
-]
-[0,1] mediante la división por 255. A diferencia del reconocedor de matrículas, donde la normalización se delegaba a la primera capa del modelo, en YOLO es práctica común realizar esta normalización explícitamente durante el preprocesamiento. La imagen normalizada es entonces transpuesta para cambiar el orden de las dimensiones de 
-(
-a
-l
-t
-o
-,
-a
-n
-c
-h
-o
-,
-c
-a
-n
-a
-l
-e
-s
-)
-(alto,ancho,canales) a 
-(
-c
-a
-n
-a
-l
-e
-s
-,
-a
-l
-t
-o
-,
-a
-n
-c
-h
-o
-)
-(canales,alto,ancho), formato requerido por ONNX Runtime para las entradas de tipo imagen. Finalmente, se añade una dimensión de lote mediante \texttt{np.expand_dims}, obteniendo un tensor de forma 
-(
-1
-,
-3
-,
-640
-,
-640
-)
-(1,3,640,640).
+La inferencia del detector se implementa en el script \texttt{inference\_onnx.py}, que demuestra el flujo completo de procesamiento desde la imagen de entrada hasta la extracción de la región de la placa. El proceso comienza con la carga de la imagen mediante OpenCV y el almacenamiento de sus dimensiones originales, información crucial para la posterior transformación inversa de coordenadas. La imagen es redimensionada a 640×640 píxeles, el tamaño esperado por el modelo, y sus píxeles son convertidos al tipo \texttt{float32} y normalizados al rango [0,1] mediante la división por 255. A diferencia del reconocedor de matrículas, donde la normalización se delegaba a la primera capa del modelo, en YOLO es práctica común realizar esta normalización explícitamente durante el preprocesamiento. La imagen normalizada es entonces transpuesta para cambiar el orden de las dimensiones de (alto,ancho,canales) a (canales,alto,ancho), formato requerido por ONNX Runtime para las entradas de tipo imagen. Finalmente, se añade una dimensión de lote mediante \texttt{np.expand\_dims}, obteniendo un tensor de forma (1,3,640,640).
 
-La salida del modelo YOLO en ONNX tiene una forma característica: 
-(
-1
-,
-84
-,
-8400
-)
-(1,84,8400) para una imagen de entrada de 640×640. El número 84 corresponde a 4 coordenadas de la caja delimitadora 
-(
-x
-,
-y
-,
-a
-n
-c
-h
-o
-,
-a
-l
-t
-o
-)
-(x,y,ancho,alto) más 80 probabilidades de clase, aunque en este caso particular solo se utiliza una clase efectiva (matrícula), manteniéndose la estructura estándar por compatibilidad. El valor 8400 representa el número total de predicciones generadas por el modelo en diferentes escalas y posiciones de la cuadrícula. El script implementa una función de postprocesamiento denominada \texttt{postprocess} que transforma esta salida en cajas delimitadoras interpretables. Primero, se extrae la matriz de predicciones y se transpone para obtener una estructura de 
-(
-8400
-,
-84
-)
-(8400,84). Se aplica una máscara de confianza que filtra aquellas predicciones cuya probabilidad de clase máxima supera el umbral establecido en 0.7 (70%), valor seleccionado empíricamente para equilibrar la sensibilidad y la especificidad en entornos de prueba. Las coordenadas de las cajas, originalmente expresadas como 
-(
-x
-_
-c
-e
-n
-t
-r
-o
-,
-y
-_
-c
-e
-n
-t
-r
-o
-,
-a
-n
-c
-h
-o
-,
-a
-l
-t
-o
-)
-(x_centro,y_centro,ancho,alto) en el espacio normalizado de 640×640, son convertidas al formato 
-(
-x
-1
-,
-y
-1
-,
-x
-2
-,
-y
-2
-)
-(x 
-1
-​
- ,y 
-1
-​
- ,x 
-2
-​
- ,y 
-2
-​
- ) y escaladas a las dimensiones originales de la imagen mediante factores de escala calculados como 
-s
-c
-a
-l
-e
-x
-=
-i
-m
-g
-_
-w
-i
-d
-t
-h
-/
-640
-scale 
-x
-​
- =img_width/640 y 
-s
-c
-a
-l
-e
-y
-=
-i
-m
-g
-_
-h
-e
-i
-g
-h
-t
-/
-640
-scale 
-y
-​
- =img_height/640.
+La salida del modelo YOLO en ONNX tiene una forma característica: (1,84,8400) para una imagen de entrada de $640 \times 640$. El número 84 corresponde a 4 coordenadas de la caja delimitadora (x,y,ancho,alto) más 80 probabilidades de clase, aunque en este caso particular solo se utiliza una clase efectiva (matrícula), manteniéndose la estructura estándar por compatibilidad. El valor 8400 representa el número total de predicciones generadas por el modelo en diferentes escalas y posiciones de la cuadrícula. El script implementa una función de postprocesamiento denominada \texttt{postprocess} que transforma esta salida en cajas delimitadoras interpretables. Primero, se extrae la matriz de predicciones y se transpone para obtener una estructura de (8400,84). Se aplica una máscara de confianza que filtra aquellas predicciones cuya probabilidad de clase máxima supera el umbral establecido en 0.7 (70\%), valor seleccionado empíricamente para equilibrar la sensibilidad y la especificidad en entornos de prueba. Las coordenadas de las cajas, originalmente expresadas como (x\_centro,y\_centro,ancho,alto) en el espacio normalizado de $640\times 640$, son convertidas al formato (x1,y1,x2,y2) y escaladas a las dimensiones originales de la imagen mediante factores de escala.
 
-Para eliminar detecciones redundantes que corresponden al mismo objeto, el script aplica Non-Maximum Suppression (NMS) mediante la función \texttt{cv2.dnn.NMSBoxes}. Este algoritmo selecciona la caja con mayor confianza dentro de un conjunto de detecciones solapadas, suprimiendo aquellas cuyo solapamiento, medido mediante Intersection over Union (IoU), supera el umbral de 0.45. Las cajas resultantes representan las detecciones finales de matrículas en la imagen original. Sobre cada detección que corresponde a la clase 0 (matrícula) y cuya confianza excede el 70%, el script extrae la región de interés aplicando un margen de 20 píxeles en cada dirección, expansión que permite incluir contexto adicional alrededor de la placa y así facilitar el trabajo del módulo reconocedor subsiguiente. Esta región recortada se almacena como \texttt{ROI.jpg} en el directorio de salidas, mientras que la imagen original se dibuja con el rectángulo delimitador y la etiqueta de confianza, redimensionándose posteriormente a un ancho de 720 píxeles mediante la función \texttt{imutils.resize} para su visualización o almacenamiento como \texttt{FullROI.jpg}. El tiempo de inferencia se mide y reporta, proporcionando una métrica cuantitativa del rendimiento del detector en el hardware de despliegue.
+Para eliminar detecciones redundantes que corresponden al mismo objeto, el script aplica Non-Maximum Suppression (NMS) mediante la función \texttt{cv2.dnn.NMSBoxes}. Este algoritmo selecciona la caja con mayor confianza dentro de un conjunto de detecciones solapadas, suprimiendo aquellas cuyo solapamiento, medido mediante Intersection over Union (IoU), supera el umbral de 0.45. Las cajas resultantes representan las detecciones finales de matrículas en la imagen original. Sobre cada detección que corresponde a la clase 0 (matrícula) y cuya confianza excede el 70\%, el script extrae la región de interés aplicando un margen de 20 píxeles en cada dirección, expansión que permite incluir contexto adicional alrededor de la placa y así facilitar el trabajo del módulo reconocedor subsiguiente. Esta región recortada se almacena como \texttt{ROI.jpg} en el directorio de salidas, mientras que la imagen original se dibuja con el rectángulo delimitador y la etiqueta de confianza, redimensionándose posteriormente a un ancho de 720 píxeles mediante la función \texttt{imutils.resize} para su visualización o almacenamiento como \texttt{FullROI.jpg}. El tiempo de inferencia se mide y reporta, proporcionando una métrica cuantitativa del rendimiento del detector en el hardware de despliegue.
 
 La integración del MLP-Detector con el MLP-Recognizer completa el pipeline de reconocimiento automático: la primera etapa localiza la matrícula dentro de la imagen de escena, y la segunda etapa traduce la región recortada a texto. Esta separación de responsabilidades permite optimizar cada módulo de forma independiente, reentrenar el detector con nuevas condiciones de captura sin afectar al reconocedor, o sustituir cualquiera de los dos componentes por alternativas sin modificar el resto del sistema. Además, la adopción del formato ONNX en ambas etapas garantiza la coherencia del formato de intercambio y la posibilidad de desplegar el pipeline completo en entornos de producción con requisitos estrictos de latencia y uso de memoria.
 %endregion
@@ -388,13 +183,13 @@ La integración del MLP-Detector con el MLP-Recognizer completa el pipeline de r
 \section{MLP-Recognizer}
 MLP-Recognizer constituye el componente central de inferencia del sistema propuesto, encargado de traducir las imágenes de matrículas vehiculares, ya sean sintéticas o reales, en cadenas de texto alfanuméricas que cumplen con la normativa mexicana. A diferencia de los módulos precedentes dedicados a la generación y aumentación de datos, este reconocedor ha sido diseñado para operar en entornos de producción con restricciones de latencia y recursos computacionales, empleando para ello el formato ONNX (Open Neural Network Exchange) como interfaz de despliegue. La decisión de adoptar ONNX responde a la necesidad de independizar la inferencia del \textit{framework} de entrenamiento original (TensorFlow/Keras), permitiendo así la integración del modelo en aplicaciones ligeras, sistemas embebidos o servicios en la nube sin la sobrecarga asociada a las dependencias completas de TensorFlow.
 
-La arquitectura del reconocedor se fundamenta en un modelo de tipo CCT (Compact Convolutional Transformer), cuya configuración se encuentra documentada en \cite{fastplateOCR}. Este modelo combina las ventajas de las capas convolucionales para la extracción de características locales con la capacidad de los transformadores para modelar dependencias secuenciales a larga distancia. El preprocesamiento de la imagen de entrada se realiza conforme a especificaciones estrictas definidas en \texttt{plate_config.yaml}: las imágenes son redimensionadas a 70 píxeles de alto por 140 de ancho, manteniendo la relación de aspecto original mediante la técnica de \textit{letterboxing} que centra la imagen sobre un fondo negro. El modo de color empleado es escala de grises, reduciendo así la dimensionalidad de los datos de entrada a un único canal. Una vez redimensionada, la imagen es convertida al tipo \texttt{float32} y presentada al modelo sin normalización adicional. El modelo produce una salida con forma (1,9,33), donde 9 corresponde al número máximo de ranuras (\textit{slots}) que puede contener una matrícula mexicana conforme al formato estándar LLL-NNN-L y sus variantes estatales, y 33 representa el tamaño del vocabulario definido en la configuración. Este vocabulario incluye los diez dígitos numéricos (0-9), las veintiséis letras del alfabeto excluyendo las vocales problemáticas I, Ñ, O y Q, y el carácter de separación \quotes{-}, totalizando así 33 símbolos posibles por posición. El carácter de relleno (\textit{pad character}), también definido como \quotes{-}, se utiliza para completar aquellas placas cuya longitud efectiva es inferior a nueve caracteres, garantizando que todas las salidas mantengan una dimensionalidad consistente. La decodificación de la predicción se realiza aplicando la función softmax sobre las activaciones de cada ranura, seleccionando el índice con mayor probabilidad y mapeándolo al carácter correspondiente en el alfabeto. El script de inferencia calcula además la confianza por cada posición como la probabilidad asignada al carácter elegido, proporcionando así una métrica de fiabilidad que permite filtrar predicciones dudosas o activar mecanismos de reintento.
+La arquitectura del reconocedor se fundamenta en un modelo de tipo CCT (Compact Convolutional Transformer), cuya configuración se encuentra documentada en \cite{fastplateOCR}. Este modelo combina las ventajas de las capas convolucionales para la extracción de características locales con la capacidad de los transformadores para modelar dependencias secuenciales a larga distancia. El preprocesamiento de la imagen de entrada se realiza conforme a especificaciones estrictas definidas en \texttt{plate\_config.yaml}: las imágenes son redimensionadas a 70 píxeles de alto por 140 de ancho, manteniendo la relación de aspecto original mediante la técnica de \textit{letterboxing} que centra la imagen sobre un fondo negro. El modo de color empleado es escala de grises, reduciendo así la dimensionalidad de los datos de entrada a un único canal. Una vez redimensionada, la imagen es convertida al tipo \texttt{float32} y presentada al modelo sin normalización adicional. El modelo produce una salida con forma (1,9,33), donde 9 corresponde al número máximo de ranuras (\textit{slots}) que puede contener una matrícula mexicana conforme al formato estándar LLL-NNN-L y sus variantes estatales, y 33 representa el tamaño del vocabulario definido en la configuración. Este vocabulario incluye los diez dígitos numéricos (0-9), las veintiséis letras del alfabeto excluyendo las vocales problemáticas I, Ñ, O y Q, y el carácter de separación \quotes{-}, totalizando así 33 símbolos posibles por posición. El carácter de relleno (\textit{pad\ character}), también definido como \quotes{-}, se utiliza para completar aquellas placas cuya longitud efectiva es inferior a nueve caracteres, garantizando que todas las salidas mantengan una dimensionalidad consistente. La decodificación de la predicción se realiza aplicando la función softmax sobre las activaciones de cada ranura, seleccionando el índice con mayor probabilidad y mapeándolo al carácter correspondiente en el alfabeto. El script de inferencia calcula además la confianza por cada posición como la probabilidad asignada al carácter elegido, proporcionando así una métrica de fiabilidad que permite filtrar predicciones dudosas o activar mecanismos de reintento.
 
-El proceso de inferencia ha sido encapsulado en el script \texttt{onnx_inference.py}, el cual implementa una interfaz de línea de comandos parametrizable. Este script replica exactamente el preprocesamiento utilizado durante el entrenamiento del modelo original en Keras, condición indispensable para garantizar la coherencia entre las fases de aprendizaje y despliegue. La función \texttt{preprocess_image_onnx} carga la imagen mediante OpenCV, la convierte a escala de grises si así se especifica, y aplica el redimensionamiento con preservación de la relación de aspecto utilizando interpolación lineal. El uso de un canvas negro y el centrado de la imagen redimensionada asegura que las características geométricas de los caracteres no se vean distorsionadas por cambios en las proporciones originales. La carga del modelo ONNX se realiza mediante la clase \texttt{InferenceSession} de la biblioteca \texttt{onnxruntime}, la cual optimiza automáticamente la ejecución para el hardware disponible, ya sea CPU o GPU, sin necesidad de modificaciones en el código.
+El proceso de inferencia ha sido encapsulado en el script \texttt{onnx\_inference.py}, el cual implementa una interfaz de línea de comandos parametrizable. Este script replica exactamente el preprocesamiento utilizado durante el entrenamiento del modelo original en Keras, condición indispensable para garantizar la coherencia entre las fases de aprendizaje y despliegue. La función \texttt{preprocess\_image\_onnx} carga la imagen mediante OpenCV, la convierte a escala de grises si así se especifica, y aplica el redimensionamiento con preservación de la relación de aspecto utilizando interpolación lineal. El uso de un canvas negro y el centrado de la imagen redimensionada asegura que las características geométricas de los caracteres no se vean distorsionadas por cambios en las proporciones originales. La carga del modelo ONNX se realiza mediante la clase \texttt{InferenceSession} de la biblioteca \texttt{onnxruntime}, la cual optimiza automáticamente la ejecución para el hardware disponible, ya sea CPU o GPU, sin necesidad de modificaciones en el código.
 
 La exportación del modelo desde TensorFlow a ONNX se lleva a cabo mediante el script \texttt{exporter.py}, el cual maneja cuidadosamente las particularidades de las capas personalizadas implementadas en el modelo original. Entre estas capas destacan \texttt{MaxBlurPooling2D}, que combina operaciones de agrupamiento con filtros de suavizado para reducir la pérdida de información en el submuestreo; \texttt{PatchExtractor} y \texttt{PositionEmbedding}, que segmentan la imagen en parches y añaden información posicional; \texttt{TransformerBlock} y \texttt{TokenReducer}, que implementan la mecánica de atención con reducción progresiva de tokens para mejorar la eficiencia computacional; y \texttt{VocabularyProjection}, que proyecta las representaciones latentes al espacio del vocabulario de salida. La exportación requiere parchear la función de activación GELU (\textit{Gaussian Error Linear Unit}) para evitar el uso de operaciones no soportadas por ONNX, reemplazándola por una aproximación basada en la función tangente hiperbólica que preserva la fidelidad numérica mientras asegura la compatibilidad multiplataforma. El proceso de conversión genera un archivo \texttt{best.onnx} que contiene tanto la estructura del grafo computacional como los pesos entrenados, todo ello en un formato estándar que puede ser consumido por cualquier motor de inferencia compatible.
 
-El módulo MLP-Recognizer se completa con la funcionalidad de decodificación avanzada implementada en la función \texttt{decode_prediction}. Esta función no solo extrae la secuencia de caracteres de máxima probabilidad, sino que también retorna las confidencias individuales por ranura, los índices seleccionados y la matriz completa de probabilidades softmax. Esta información adicional resulta invaluable para tareas de análisis posteriores, como la detección de caracteres ambiguos (por ejemplo, distinción entre \quotes{0} y \quotes{O}, aunque este último no forme parte del vocabulario), la evaluación de la incertidumbre del modelo en condiciones adversas, o la implementación de mecanismos de corrección basados en reglas gramaticales propias de la normativa mexicana. La interfaz de línea de comandos del script permite especificar el directorio de entrada de imágenes mediante el argumento \texttt{--input_dir}, y produce una salida estructurada que incluye la placa detectada, la confianza promedio y el desglose de predicciones por ranura, incluyendo las tres alternativas más probables para cada posición, facilitando así la depuración y el análisis cualitativo de los resultados.
+El módulo MLP-Recognizer se completa con la funcionalidad de decodificación avanzada implementada en la función \texttt{decode\_prediction}. Esta función no solo extrae la secuencia de caracteres de máxima probabilidad, sino que también retorna las confidencias individuales por ranura, los índices seleccionados y la matriz completa de probabilidades softmax. Esta información adicional resulta invaluable para tareas de análisis posteriores, como la detección de caracteres ambiguos (por ejemplo, distinción entre \quotes{0} y \quotes{O}, aunque este último no forme parte del vocabulario), la evaluación de la incertidumbre del modelo en condiciones adversas, o la implementación de mecanismos de corrección basados en reglas gramaticales propias de la normativa mexicana. La interfaz de línea de comandos del script permite especificar el directorio de entrada de imágenes mediante el argumento \texttt{--input\_dir}, y produce una salida estructurada que incluye la placa detectada, la confianza promedio y el desglose de predicciones por ranura, incluyendo las tres alternativas más probables para cada posición, facilitando así la depuración y el análisis cualitativo de los resultados.
 %endregion
 
 %region MLP-Pipeline
@@ -402,31 +197,13 @@ El módulo MLP-Recognizer se completa con la funcionalidad de decodificación av
 
 El módulo MLP-Pipeline constituye la capa de integración y orquestación de todo el sistema de reconocimiento automático de placas vehiculares mexicanas, coordinando la interacción secuencial entre el detector, el reconocedor óptico de caracteres y la base de datos de registro vehicular. Este módulo ha sido diseñado como una clase cohesiva denominada \texttt{MexicanLicencePlateDetector}, la cual encapsula toda la lógica necesaria para transformar una imagen de escena completa en información estructurada sobre el vehículo y su propietario, ofreciendo una interfaz unificada que abstrae la complejidad subyacente de los modelos ONNX, los preprocesamientos específicos y las consultas a la base de datos. La implementación de este pipeline responde a la necesidad de contar con una herramienta reproducible y configurable que pueda ser empleada tanto en entornos de investigación como en aplicaciones de producción, permitiendo además la sustitución o actualización de cualquiera de sus componentes sin afectar al resto del sistema.
 
-La arquitectura del pipeline se fundamenta en una clase principal que inicializa todos los componentes necesarios durante su construcción. El método \texttt{__init__} recibe como parámetros las rutas a los modelos ONNX del detector y del reconocedor, la ruta al archivo de configuración YAML del OCR, la ubicación de la base de datos SQLite y el directorio de salida para los artefactos generados. Internamente, este método invoca funciones privadas de inicialización que cargan los modelos mediante \texttt{ort.InferenceSession}, parsean el archivo de configuración del reconocedor extrayendo parámetros críticos como el alfabeto, las dimensiones de entrada (70×140 píxeles) y el modo de color (escala de grises), y establecen la conexión con la base de datos. La inicialización de la base de datos merece una atención particular: el método \texttt{_initialize_database} verifica la existencia del archivo SQLite y de la tabla \texttt{Registros}; si la tabla no existe o se encuentra vacía, intenta cargar los datos desde un archivo CSV generado previamente por el módulo MLP-Generator, el cual contiene información sintética como la matrícula, el estado de registro, la marca y modelo del vehículo, el color, el estatus legal, el propietario y la fecha de registro. Esta estrategia asegura que el pipeline pueda operar incluso en ausencia de una base de datos preexistente, utilizando los metadatos sintéticos generados durante la fase de creación del dataset.
+La arquitectura del pipeline se fundamenta en una clase principal que inicializa todos los componentes necesarios durante su construcción. El método \texttt{init} recibe como parámetros las rutas a los modelos ONNX del detector y del reconocedor, la ruta al archivo de configuración YAML del OCR, la ubicación de la base de datos SQLite y el directorio de salida para los artefactos generados. Internamente, este método invoca funciones privadas de inicialización que cargan los modelos mediante \texttt{ort.InferenceSession}, parsean el archivo de configuración del reconocedor extrayendo parámetros críticos como el alfabeto, las dimensiones de entrada ($70 \times 140$ píxeles) y el modo de color (escala de grises), y establecen la conexión con la base de datos. La inicialización de la base de datos merece una atención particular: el método \texttt{\_initialize\_database} verifica la existencia del archivo SQLite y de la tabla \texttt{Registros}; si la tabla no existe o se encuentra vacía, intenta cargar los datos desde un archivo CSV generado previamente por el módulo MLP-Generator, el cual contiene información sintética como la matrícula, el estado de registro, la marca y modelo del vehículo, el color, el estatus legal, el propietario y la fecha de registro. Esta estrategia asegura que el pipeline pueda operar incluso en ausencia de una base de datos preexistente, utilizando los metadatos sintéticos generados durante la fase de creación del dataset.
 
-El flujo principal de procesamiento se implementa en el método \texttt{process_image}, que recibe la ruta a una imagen y retorna un diccionario estructurado con todos los resultados. Este método sigue una secuencia de cuatro etapas perfectamente diferenciadas: detección de la placa, extracción de la región de interés, reconocimiento óptico de caracteres y consulta a la base de datos. En la primera etapa, se invoca el método \texttt{_prepare_detector_input} que carga la imagen mediante OpenCV, la redimensiona a 640×640 píxeles, normaliza sus valores al rango 
-[
-0
-,
-1
-]
-[0,1] mediante división por 255, transpone las dimensiones al formato canales-primero y añade la dimensión de lote. Este tensor es pasado al modelo YOLO previamente cargado, y las salidas obtenidas son procesadas por \texttt{_postprocess_detections}, que aplica filtrado por umbral de confianza (0.7), Non-Maximum Suppression (0.45) y escalado inverso de coordenadas a las dimensiones originales de la imagen. La detección correspondiente a la clase 0 (matrícula vehicular) es seleccionada como la región de interés.
+El flujo principal de procesamiento se implementa en el método \texttt{process\_image}, que recibe la ruta a una imagen y retorna un diccionario estructurado con todos los resultados. Este método sigue una secuencia de cuatro etapas perfectamente diferenciadas: detección de la placa, extracción de la región de interés, reconocimiento óptico de caracteres y consulta a la base de datos. En la primera etapa, se invoca el método \texttt{\_prepare\_detector\_input} que carga la imagen mediante OpenCV, la redimensiona a $640\times 640$ píxeles, normaliza sus valores al rango [0,1] mediante división por 255, transpone las dimensiones al formato canales-primero y añade la dimensión de lote. Este tensor es pasado al modelo YOLO previamente cargado, y las salidas obtenidas son procesadas por \texttt{\_postprocess\_detections}, que aplica filtrado por umbral de confianza (0.7), Non-Maximum Suppression (0.45) y escalado inverso de coordenadas a las dimensiones originales de la imagen. La detección correspondiente a la clase 0 (matrícula vehicular) es seleccionada como la región de interés.
 
-Una vez localizada la placa, el pipeline procede a la extracción de la ROI aplicando un margen de 5 píxeles en cada dirección, expansión que permite incluir un pequeño contexto alrededor de la matrícula y así mitigar posibles errores de delimitación del detector. Esta región recortada es almacenada en el directorio de salida con un nombre derivado del archivo original, y simultáneamente se dibuja sobre la imagen original el rectángulo delimitador junto con la etiqueta de confianza, generándose una imagen de visualización completa que facilita la depuración y la presentación de resultados. La tercera etapa corresponde al reconocimiento OCR, para lo cual la ROI es procesada por el método \texttt{_preprocess_ocr_image}, que replica exactamente el preprocesamiento empleado durante el entrenamiento del modelo CCT: conversión a escala de grises, redimensionamiento a 70×140 píxeles con preservación de la relación de aspecto mediante la técnica de \textit{letterboxing} sobre un canvas negro, y conversión a \texttt{float32} sin normalización adicional, dado que el modelo incorpora una capa de escalado por 
-1
-/
-255
-1/255. El tensor resultante es alimentado al modelo ONNX del reconocedor, y la salida con forma 
-(
-1
-,
-9
-,
-33
-)
-(1,9,33) es decodificada mediante \texttt{_decode_ocr_prediction}, que aplica la función softmax sobre las activaciones de cada una de las nueve ranuras, selecciona el carácter con máxima probabilidad para cada posición, y calcula la confianza individual por carácter así como la confianza promedio de toda la matrícula.
+Una vez localizada la placa, el pipeline procede a la extracción de la ROI aplicando un margen de 5 píxeles en cada dirección, expansión que permite incluir un pequeño contexto alrededor de la matrícula y así mitigar posibles errores de delimitación del detector. Esta región recortada es almacenada en el directorio de salida con un nombre derivado del archivo original, y simultáneamente se dibuja sobre la imagen original el rectángulo delimitador junto con la etiqueta de confianza, generándose una imagen de visualización completa que facilita la depuración y la presentación de resultados. La tercera etapa corresponde al reconocimiento OCR, para lo cual la ROI es procesada por el método \texttt{\_preprocess\_ocr\_image}, que replica exactamente el preprocesamiento empleado durante el entrenamiento del modelo CCT: conversión a escala de grises, redimensionamiento a 70×140 píxeles con preservación de la relación de aspecto mediante la técnica de \textit{letterboxing} sobre un canvas negro, y conversión a \texttt{float32} sin normalización adicional, dado que el modelo incorpora una capa de escalado por 1/255. El tensor resultante es alimentado al modelo ONNX del reconocedor, y la salida con forma (1,9,33) es decodificada mediante \texttt{\_decode\_ocr\_prediction}, que aplica la función softmax sobre las activaciones de cada una de las nueve ranuras, selecciona el carácter con máxima probabilidad para cada posición, y calcula la confianza individual por carácter así como la confianza promedio de toda la matrícula.
 
-La cuarta y última etapa del pipeline consiste en la consulta a la base de datos SQLite utilizando el texto de la placa reconocida como clave primaria. El método \texttt{_query_database} ejecuta una sentencia SELECT sobre la tabla \texttt{Registros} y, si existe un registro con esa matrícula, retorna un diccionario con todos los campos asociados, incluyendo el estado de procedencia, la marca y modelo del vehículo, el color, el estatus legal (por ejemplo, \quotes{regular}, \quotes{robado} o \quotes{reportado}), el nombre del propietario y la fecha de registro. Esta integración con una base de datos relacional confiere al pipeline una dimensión semántica que trasciende el mero reconocimiento visual, permitiendo su empleo en aplicaciones de verificación vehicular, control de acceso o análisis de seguridad vial. El diccionario de resultados agrega además metadatos sobre el éxito de la operación, las rutas de los archivos generados y, en caso de fallo, un mensaje de error descriptivo que facilita la depuración.
+La cuarta y última etapa del pipeline consiste en la consulta a la base de datos SQLite utilizando el texto de la placa reconocida como clave primaria. El método \texttt{\_query\_database} ejecuta una sentencia SELECT sobre la tabla \texttt{Registros} y, si existe un registro con esa matrícula, retorna un diccionario con todos los campos asociados, incluyendo el estado de procedencia, la marca y modelo del vehículo, el color, el estatus legal (por ejemplo, \quotes{regular}, \quotes{robado} o \quotes{reportado}), el nombre del propietario y la fecha de registro. Esta integración con una base de datos relacional confiere al pipeline una dimensión semántica que trasciende el mero reconocimiento visual, permitiendo su empleo en aplicaciones de verificación vehicular, control de acceso o análisis de seguridad vial. El diccionario de resultados agrega además metadatos sobre el éxito de la operación, las rutas de los archivos generados y, en caso de fallo, un mensaje de error descriptivo que facilita la depuración.
 
 El módulo incorpora también una interfaz de línea de comandos completa gestionada por \texttt{argparse}, que permite ejecutar el pipeline de forma autónoma sin necesidad de modificar el código fuente. Los argumentos configurables incluyen la ruta a la imagen de entrada (obligatoria), rutas personalizadas para los modelos ONNX, el archivo de configuración del OCR y la base de datos, así como el directorio de salida para los resultados. Esta flexibilidad resulta esencial para entornos de investigación donde se requiere comparar diferentes versiones de modelos, así como para entornos de producción donde las rutas de los artefactos pueden variar según la instalación. El script de ejemplo \texttt{main.py} demuestra el uso completo del pipeline, mostrando en consola información detallada de cada etapa del procesamiento: las coordenadas de la placa detectada, la confianza del detector, el texto reconocido con sus confidencias por carácter, y los datos asociados recuperados de la base de datos.
 
@@ -439,7 +216,7 @@ Con el objetivo de validar la funcionalidad y el rendimiento del sistema LPR-Sen
 
 \subsection{Validación del generador de matrículas sintéticas}
 
-El módulo MLP-Generator fue evaluado en términos de su capacidad para producir matrículas conformes a la norma NOM-001-SCT-2-2016 y a las particularidades de cada entidad federativa. Se generaron 10,000 matrículas por cada uno de los 32 estados, totalizando 320,000 muestras sintéticas. La validación de conformidad normativa se realizó mediante un script de verificación que comprobaba, para cada matrícula generada, la pertenencia de la secuencia alfanumérica al rango asignado a su estado según el Apéndice C de la norma. Los resultados indicaron una tasa de conformidad del 100%, dado que el algoritmo de generación implementa directamente las restricciones de rangos y no recurre a muestreo con rechazo. Adicionalmente, se verificó la exclusión de las letras problemáticas \quotes{I}, \quotes{Ñ}, \quotes{O} y \quotes{Q} en todas las muestras, así como la correcta inclusión del carácter separador \quotes{-} en las posiciones definidas por el formato de cada estado. La Tabla \ref{tab:generation_stats} resume la distribución de matrículas generadas por tipo de formato, donde el formato estándar LLL-NNN-L representa aproximadamente el 78% del total, mientras que las variantes para Ciudad de México (LNN-LLL) y Guanajuato (LLL-NN-LL) concentran el 15% y el 7% restante, respectivamente, reflejando la proporción de estos formatos en el parque vehicular real.
+El módulo MLP-Generator fue evaluado en términos de su capacidad para producir matrículas conformes a la norma NOM-001-SCT-2-2016 y a las particularidades de cada entidad federativa. Se generaron 10,000 matrículas por cada uno de los 32 estados, totalizando 320,000 muestras sintéticas. La validación de conformidad normativa se realizó mediante un script de verificación que comprobaba, para cada matrícula generada, la pertenencia de la secuencia alfanumérica al rango asignado a su estado según el Apéndice C de la norma. Los resultados indicaron una tasa de conformidad del 100\%, dado que el algoritmo de generación implementa directamente las restricciones de rangos y no recurre a muestreo con rechazo. Adicionalmente, se verificó la exclusión de las letras problemáticas \quotes{I}, \quotes{Ñ}, \quotes{O} y \quotes{Q} en todas las muestras, así como la correcta inclusión del carácter separador \quotes{-} en las posiciones definidas por el formato de cada estado. La Tabla \ref{tab:generation_stats} resume la distribución de matrículas generadas por tipo de formato, donde el formato estándar LLL-NNN-L representa aproximadamente el 78\% del total, mientras que las variantes para Ciudad de México (LNN-LLL) y Guanajuato (LLL-NN-LL) concentran el 15\% y el 7\% restante, respectivamente, reflejando la proporción de estos formatos en el parque vehicular real.
 
 \begin{table}[h]
 \centering
