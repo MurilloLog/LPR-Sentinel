@@ -10,6 +10,7 @@ Each augmentation is applied with random rotation, tilt, and perspective
 transformations to simulate real-world capture conditions.
 """
 
+#region Imports
 import cv2
 import numpy as np
 from PIL import Image, ImageEnhance, ImageOps
@@ -19,6 +20,7 @@ from pathlib import Path
 import argparse
 import json
 from tqdm import tqdm
+#endregion
 
 #region resize()
 def resize_image(image, target_size, keep_aspect_ratio=True, padding_color=(255, 255, 255)):
@@ -786,7 +788,7 @@ def process_image(image_path, output_dir, transforms_config, num_variations=1,
             # Start with original image
             transformed = image.copy()
             
-            # Apply geometric transformations as preprocessing if specified (legacy support)
+            # Apply geometric transformations as preprocessing if specified
             if geometric_params and not geometric_transforms:
                 transformed = apply_random_geometric_transforms(
                     transformed,
@@ -1002,7 +1004,7 @@ def main():
         config = load_config(args.config)
         transforms_config = config.get("transforms", {})
         geometric_transforms = config.get("geometric_transforms", {})
-        geometric_params = config.get("geometric", None)  # Legacy support
+        geometric_params = config.get("geometric", None)
         
         # Override num_variations if specified in config
         if "num_variations" in config:
@@ -1080,7 +1082,7 @@ def main():
                     "params": {}
                 }
         
-        # Parse legacy geometric parameters if provided
+        # Parse geometric parameters if provided
         if args.geometric:
             print("\nNote: --geometric parameter is deprecated. Use geometric_transforms in config file instead.")
             try:
