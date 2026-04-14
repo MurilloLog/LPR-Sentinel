@@ -17,12 +17,12 @@ This script applies various image transformations to license plate images, simul
 ## Project Structure
 ```
 /MLP-Augmentator
-|---- /augmented_dataset                # Created after running augmentator.py 
+|---- /augmented_dataset      # Created after running augmentator.py 
 |     |-- /ags                # State-specific folders (Aguascalientes)
 |     |-- /bc                 # Baja California
 |     |-- /bcs                # Baja California Sur
 |     |-- /...                # All 32 state folders
-|---- augmentator.py            # Main generation script
+|---- augmentator.py          # Main generation script
 └── README.md
 ```
 
