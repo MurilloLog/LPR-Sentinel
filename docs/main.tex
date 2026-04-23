@@ -9,30 +9,43 @@
 \usepackage{titlesec}
 \usepackage{enumitem}
 \usepackage{changepage}
-\usepackage{pdfpages}
 \usepackage{lscape}
 \usepackage{amsmath}
-\usepackage{montserrat}
+\usepackage[tabular,oldstyle]{montserrat}
 \usepackage{lipsum}
 \usepackage{comment}
-\usepackage[spanish]{babel}
+\usepackage[spanish, es-nodecimaldot, es-tabla]{babel}
+\usepackage[most]{tcolorbox}
+\usepackage{booktabs}
+\usepackage{tabularx}
 
-% ------------------------------------------
-% ToC, AIAA-style Bibliography
+\usepackage{hyperref}
+\usepackage{xcolor}
+\hypersetup{
+   colorlinks=true,
+   linkcolor=black,
+   citecolor=teal,
+   urlcolor=magenta!70!black,
+   filecolor=gray,
+   pdftitle={Título del documento},
+   pdfauthor={Autor},
+   pdfpagemode=UseOutlines
+}
+
 \usepackage[immediate]{silence}
 \WarningFilter{latex}{You have requested package}
+\WarningFilter{latex}{Font shape `T1/Montserrat-TOsF/sbx/n' undefined}
+\WarningFilter{latex}{Font shape `T1/Montserrat-TLF/sbx/n' undefined}
 \usepackage[tocgraduated]{assets/tocstyle}
 \usetocstyle{standard}
 \RequirePackage[sort&compress,numbers]{natbib}
-%\bibliographystyle{new-aiaa}
 \bibliographystyle{ieeetr}
 \WarningFilter[temp]{latex}{Command}
     \usepackage{sectsty}
 \DeactivateWarningFilters[temp]
 \usepackage[nottoc]{tocbibind}
 
-% ------------------------------------------
-% Figures & tables
+% Figuras & tablas
 \usepackage{float}
 \usepackage[small,bf]{caption}
 \usepackage{tabularx}
@@ -41,22 +54,20 @@
 \usepackage{makecell}
 \usepackage[figuresleft]{rotating}
 
-% ------------------------------------------
-% Custom layout parameters
+% Parámetros del diseño
 \usepackage[margin=0.75in]{geometry}
 \definecolor{MASA-Blue}{RGB}{0,39,76}
 \renewcommand\thesection{\Roman{section}}
 \renewcommand{\bibsection}{\section{References}}
 \newcommand{\boldheader}[1]{\vspace{5mm}\textbf{#1}\textbf{:}\newline}
-\sectionfont{\fontsize{19}{20}\color{MASA-Blue}\fontseries{b}\fontfamily{Montserrat-TOsF}\selectfont}
-\subsectionfont{\fontsize{16}{18}\color{MASA-Blue}\fontfamily{Montserrat-TOsF}\selectfont}
-\subsubsectionfont{\fontseries{sb}\fontshape{n}\color{MASA-Blue}\fontfamily{Montserrat-TOsF}\selectfont}
-\titlespacing{\subsection}{0pt}{100mm}{0pt}
+\sectionfont{\fontsize{19}{20}\color{MASA-Blue}\fontseries{b}\fontfamily{Montserrat-TLF}\selectfont}
+\subsectionfont{\fontsize{16}{18}\color{MASA-Blue}\fontfamily{Montserrat-TLF}\selectfont}
+\subsubsectionfont{\fontseries{sb}\fontshape{n}\color{MASA-Blue}\fontfamily{Montserrat-TLF}\selectfont}
+\titlespacing{\subsection}{0pt}{*2}{0pt}
 \setlength{\parindent}{0in}
 \setlength{\parskip}{1em}
 
-% ------------------------------------------
-% Letterhead
+% Encabezado
 \newcommand{\quotes}[1]{``#1''}
 \newcommand\MASALetterhead[3]{
     \hfuzz=60pt
@@ -98,13 +109,13 @@
     \begin{center}
         \includegraphics[width=7cm]{assets/Worm_vector.pdf}\\
         \vspace{20mm}
-        \fontsize{28}{30}\fontseries{b}\fontshape{n}\color{MASA-Blue}\fontfamily{Montserrat-TOsF}\selectfont{\mytitle}\\
+        \fontsize{28}{30}\fontseries{b}\fontshape{n}\color{MASA-Blue}\fontfamily{Montserrat-TLF}\selectfont{\mytitle}\\
         \vspace{15mm}
-        \fontsize{14}{16}\fontseries{sb}\fontshape{n}\color{MASA-Blue}\fontfamily{Montserrat-TOsF}\selectfont{\mydate\\\vspace{7.5mm} Prepared by:}\\
-        \fontsize{14}{16}\fontseries{m}\fontshape{n}\color{MASA-Blue}\fontfamily{Montserrat-TOsF}\selectfont{\myauthors}\\
+        \fontsize{14}{16}\fontseries{sb}\fontshape{n}\color{MASA-Blue}\fontfamily{Montserrat-TLF}\selectfont{\mydate\\\vspace{7.5mm} Prepared by:}\\
+        \fontsize{14}{16}\fontseries{m}\fontshape{n}\color{MASA-Blue}\fontfamily{Montserrat-TLF}\selectfont{\myauthors}\\
         \vspace{7.5mm}
-        \fontsize{14}{16}\fontseries{sb}\fontshape{n}\color{MASA-Blue}\fontfamily{Montserrat-TOsF}\selectfont{Prepared for:}\\
-        \fontsize{14}{16}\fontseries{m}\fontshape{n}\color{MASA-Blue}\fontfamily{Montserrat-TOsF}\selectfont{#1}
+        \fontsize{14}{16}\fontseries{sb}\fontshape{n}\color{MASA-Blue}\fontfamily{Montserrat-TLF}\selectfont{Prepared for:}\\
+        \fontsize{14}{16}\fontseries{m}\fontshape{n}\color{MASA-Blue}\fontfamily{Montserrat-TLF}\selectfont{#1}
         \vspace{50mm}
     \end{center}
     \end{adjustwidth}
@@ -126,7 +137,7 @@
     \begin{center}
         \includegraphics[width=14cm]{assets/Worm_vector.pdf}\\
         \vspace{10mm}
-        \fontsize{33}{35}\fontseries{b}\fontshape{n}\color{MASA-Blue}\fontfamily{Montserrat-TOsF}\selectfont{\mytitle}
+        \fontsize{33}{35}\fontseries{b}\fontshape{n}\color{MASA-Blue}\fontfamily{Montserrat-TLF}\selectfont{\mytitle}
         \vspace{45mm}
     \end{center}
     \end{adjustwidth}
@@ -136,14 +147,14 @@
 
 % ------------------------------------------
 % Abstract
-\newcommand\MASAacknowledgements[1]{
+\newcommand\Abstract[1]{
     \newpage
     \topskip0pt
     %\addcontentsline{toc}{section}{Abstract}
     \vspace*{\fill}
     \begin{adjustwidth}{1.5cm}{1.5cm} 
     \begin{center}
-    \textbf{\Large\color{MASA-Blue}\fontfamily{Montserrat-TOsF}\selectfont Abstract}\\
+    \textbf{\Large\color{MASA-Blue}\fontfamily{Montserrat-TLF}\selectfont Abstract}\\
     \vspace{5mm}
     \end{center}
     #1
@@ -168,110 +179,25 @@
     keepspaces=true
 }
 
-% ------------------------------------------
-% Custom Math Shorthand (Credit: kfid@umich.edu)
-\newcommand{\pp}[2]{\dfrac{\partial #1}{\partial #2}}
-\newcommand{\ppt}[2]{\dfrac{\partial^2 #1}{\partial #2^2}}
-\newcommand{\DD}[2]{\dfrac{D #1}{D #2}}
-\newcommand{\dd}[2]{\dfrac{d #1}{d #2}}
-\newcommand{\mbb}[1]{\mathbb{#1}}
-\newcommand{\mbf}[1]{\mathbf{#1}}
-\newcommand{\mrm}[1]{\mathrm{#1}}
-\newcommand{\mcal}[1]{\mathcal{#1}}
-\newcommand{\BigO}{\mathcal{O}}
-\newcommand{\norm}[2]{\left\lVert{#1}\right\lVert_{#2}}
-\newcommand{\sbf}[1]{\boldsymbol{#1}}
-\def\etal{{\it et al~}}
-\newcommand{\be}{\begin{eqnarray}}
-\newcommand{\ee}{\end{eqnarray}}
-\newcommand{\ben}{\begin{eqnarray*}}
-\newcommand{\een}{\end{eqnarray*}}
-\newcommand{\dx}{d\mbf{x}}
-\newcommand{\Dt}{\Delta t}
-\newcommand{\ih}{\hat{i}}
-\newcommand{\jh}{\hat{j}}
-\newcommand{\kh}{\hat{k}}
-\newcommand{\xh}{\hat{x}}
-\newcommand{\yh}{\hat{y}}
-\newcommand{\zh}{\hat{z}}
-\newcommand{\Uinf}{U_{\infty}}
-\newcommand{\Vinf}{V_{\infty}}
-\newcommand{\Minf}{M_{\infty}}
-\newcommand{\bVinf}{\mbf{V}_{\infty}}
-\newcommand{\scriptth}{\scriptsize \textnormal{th}}
-\newcommand{\half}{\frac{1}{2}}
-\newcommand{\CFL}{{\mbox{CFL}}}
-\newcommand{\tn}[1]{\textnormal{#1}}
-\newcommand{\mbfh}[1]{\widehat{\mathbf{#1}}}
-\newcommand{\m}{\textrm{m}}
-\newcommand{\s}{\textrm{s}}
-\newcommand{\kg}{\textrm{kg}}
-\newcommand{\km}{\textrm{km}}
-\newcommand{\N}{\textrm{N}}
-\newcommand{\Pa}{\textrm{Pa}}
-\newcommand{\K}{\textrm{K}}
-\newcommand{\C}{\textrm{C}}
-\newcommand{\mbfv}[1]{\vec{\mathbf{#1}}}
-%\newcommand{\comment}[1]{}
-
-% Preamble
+% Preambulo
 \newcommand{\mytitle}{A High-Speed Neural Vision System for Mexican Licence Plate Recognition}
 \newcommand{\myauthors}{Gustavo Adolfo Murillo Gutierrez}
 \newcommand{\mydate}{8 de Mayo de 2026}
 
+%region Portada
 \begin{document}
-% ------------------------------------------
-% LETTER
-% ------------------------------------------
-% MASA Letterhead
-%\MASALetterhead
-%    {2603 Draper Dr.\\Ann Arbor, MI 48109\\(555) 555-5555} % From
-%    {Sergei Korolev, Chief Engineer\\Michigan Aeronautical Science Association (MASA)\\2603 Draper Dr.\\Ann Arbor, MI 48109}                             % To
-%    {Some subject goes here}                              % Subject
-
-% Letter Body
-%Dear Mr. Korolev:
-
-%\lipsum[2-4]
-
-%Andrei Tupolev, Burt Rutan, Kelly Johnson, Robert Goddard, Theodore von Karman, Wernher von Braun
-
-% Signatures
-%\begin{flushright}
-%    \begin{tabularx}{0.5\textwidth}{l l @{}}
-%        Sincerely, & \\
-%        \signature{4}{Andrei Tupolev} & \signature{3.2}{Burt Rutan}\\
-%        \signature{4}{Kelly Johnson} & \signature{3.2}{Robert Goddard}\\
-%        \signature{4}{Theodore von Karman} & \signature{3.2}{Wernher von Braun}
-%    \end{tabularx}
-%\end{flushright}
-%enc.
-%\hfuzz=0pt
-
-% ------------------------------------------
-% TITLE PAGE, COVER PAGE, ACKNOWLEDGEMENTS, TABLES
-% ------------------------------------------
-% Cover and title pages
 \makeCoverPage
-%\makeTitlePage{Sergei Korolev, Chief Engineer (MASA)} % (Prepared for)
+\Abstract{
+    El reconocimiento automático de matrículas vehiculares (LPR) se ha convertido en una tecnología clave dentro del campo de los sistemas inteligentes aplicados al transporte y la videovigilancia. Actualmente, se han publicado diversos estudios que facilitan el despliegue de este tipo de sistemas haciendo uso de frameworks open-source. Sin embargo, hasta nuestro conocimiento, no se ha presentado un trabajo que porporcione las condiciones suficientes y necesarias para implementar un sistema LPR nativo para las distintas entidades federativas de México. La heterogeneidad en los diseños de cada entidad federativa, la ausencia de bases de datos públicas etiquetadas y las restricciones legales asociadas al uso de imágenes reales de vehículos y sus propietarios convierten a este problema en una oportunidad de exploración. LPR-Sentinel nace como un sistema completo de generación, aumentación, detección y reconocimiento de matrículas mexicanas basado exclusivamente en datos sintéticos y desplegable sobre hardware de bajo poder computacional. El sistema se integra por cinco módulos independientes: (1) MLP-Generator, que produce matrículas sintéticas conforme a la Norma Oficial Mexicana NOM-001-SCT-2-2016, (2) MLP-Augmentator, que aplica 29 transformaciones morfológicas para simular condiciones reales de captura, (3) MLP-Detector, basado en Redes Neuronales Convolucionales (CNN) para localizar la placa en imágenes de escena completa, (4) MLP-Recognizer, basado en una arquitectura Compact Convolutional Transformer (CCT) que transcribe el texto de la matrícula y (5) MLP-Pipeline, que integra todos los componentes anteriores junto con una base de datos SQLite, alcanzando una tasa de éxito integral del XXXX\% en condiciones diurnas y del XXXX\% en condiciones nocturnas sobre un conjunto de prueba simulado, con una latencia extremo a extremo promedio de XXXXX ms por imagen. Los resultados demuestran que los datos sintéticos, cuando son generados con estricto apego a la normativa y aumentados adecuadamente, pueden complementar a los datos reales en el entrenamiento de sistemas LPR sin incurrir en problemas éticos, legales y de rendimiento. El uso del formato ONNX como interfaz unificada de despliegue permite ejecutar el pipeline completo en dispositivos de bajo poder computacional como la Raspberry Pi 4B, abriendo la posibilidad de aplicaciones distribuidas y sistemas embebidos. El código fuente, los modelos entrenados y las bases de datos sintéticas generadas se encuentran disponibles públicamente, garantizando la reproducibilidad y facilitando la extensión de este trabajo por parte de la comunidad científica.
 
-% Acknowledgements page
-\MASAacknowledgements{
-    El reconocimiento automático de matrículas vehiculares (LPR) se ha convertido en una tecnología clave dentro del campo de los sistemas inteligentes aplicados al transporte y la videovigilancia. Actualmente, se han publicado diversos estudios que facilitan el despliegue de este tipo de sistemas haciendo uso de frameworks open-source. Sin embargo, hasta nuestro conocimiento, no se ha presentado un trabajo que porporcione las condiciones suficientes y necesarias para implementar un sistema LPR nativo para las distintas entidades federativas de México. La heterogeneidad en los diseños de cada entidad federativa, la ausencia de bases de datos públicas etiquetadas y las restricciones legales asociadas al uso de imágenes reales de vehículos y sus propietarios convierten a este problema en una oportunidad de exploración. LPR-Sentinel nace como un sistema completo de generación, aumentación, detección y reconocimiento de matrículas mexicanas basado exclusivamente en datos sintéticos y desplegable sobre hardware de bajo poder computacional. El sistema se integra por cinco módulos independientes: (1) MLP-Generator, que produce matrículas sintéticas conforme a la Norma Oficial Mexicana NOM-001-SCT-2-2016, (2) MLP-Augmentator, que aplica 29 transformaciones morfológicas para simular condiciones reales de captura, (3) MLP-Detector, basado en YOLOv11s para localizar la placa en imágenes de escena completa, (4) MLP-Recognizer, basado en una arquitectura Compact Convolutional Transformer (CCT) que transcribe el texto de la matrícula y (5) MLP-Pipeline, que integra todos los componentes anteriores junto con una base de datos SQLite, alcanzando una tasa de éxito integral del XXXX\% en condiciones diurnas y del XXXX\% en condiciones nocturnas sobre un conjunto de prueba real, con una latencia extremo a extremo de XXXXX ms por imagen. Los resultados demuestran que los datos sintéticos, cuando son generados con estricto apego a la normativa y aumentados adecuadamente, pueden complementar a los datos reales en el entrenamiento de sistemas LPR sin incurrir en problemas éticos, legales y de rendimiento. El uso del formato ONNX como interfaz unificada de despliegue permite ejecutar el pipeline completo en dispositivos de bajo poder computacional como la Raspberry Pi 4B, abriendo la posibilidad de aplicaciones distribuidas y sistemas embebidos. El código fuente, los modelos entrenados y las bases de datos sintéticas generadas se encuentran disponibles públicamente, garantizando la reproducibilidad y facilitando la extensión de este trabajo por parte de la comunidad investigadora.
-
-    \textbf{\small\color{MASA-Blue}\fontfamily{Montserrat-TOsF}\selectfont Keywords:} Reconocimiento automático de placas mexicanas, LPR, datos sintéticos, YOLOv11s, FastPlateOCR, ONNX, Raspberry Pi 4B, NOM-001-SCT-2-2016.
+    \textbf{\small\color{MASA-Blue}\fontfamily{Montserrat-TLF}\selectfont Keywords:} Reconocimiento automático de placas mexicanas, LPR, datos sintéticos, YOLOv11s, FastPlateOCR, ONNX, Raspberry Pi 4B, NOM-001-SCT-2-2016.
 }
-\ClearWallPaper % (Removes letter/cover footer graphic from subsequent pages)
+\ClearWallPaper
 \pagenumbering{roman}
-
-%region Indice
-% Indice de contenidos, figuras y tablas
 \newpage
 \tableofcontents
 \newpage
 \listoffigures
-\newpage
-\listoftables
 \newpage
 %endregion
 
@@ -281,46 +207,15 @@
 \lipsum[1-5]
 %endregion
 
+%region Contenido
+\input{assets/section1}
+\input{assets/section2}
+\input{assets/section3}
+\input{assets/section4}
+\input{assets/section5}
+%endregion
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-% CONTENIDO
-\include{assets/section1}
-\include{assets/section2}
-\include{assets/section3}
-%\include{assets/section4}
-%\include{assets/section5}
-
-% BIBLIOGRAFIA
+%region Bibliografía
 \bibliography{references}
+%endregion
 \end{document}
