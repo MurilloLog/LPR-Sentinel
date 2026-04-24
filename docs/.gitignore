@@ -16,5 +16,7 @@
 *.fdb_latexmk
 *.pdf
 *.bbl-*
-
+*.lof
+*.lot
+*.bst
 # Ignore outdir files
