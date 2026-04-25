@@ -1,0 +1,62 @@
+%region Resumen ejecutivo
+\section*{Resumen Ejecutivo}
+\addcontentsline{toc}{section}{Resumen Ejecutivo}
+LPR-Sentinel es una solución de visión computacional para el reconocimiento automático de matrículas mexicanas para automóviles particulares. El sistema emplea datos exclusivamente sintéticos generados conforme a la Norma Oficial Mexicana NOM-001-SCT-2-2016, lo que elimina las complejidades éticas y legales asociadas al uso de imágenes de matrículas reales. La arquitectura se compone de cinco módulos independientes: generador procedimental de matrículas mexicanas, aumentador de datos, detector de placas, reconocedor de caracteres y un módulo de integración que permite realizar consultas a una base de datos SQLite. Todos los modelos de inferencia entrenados y de autoría propia se exportan al formato ONNX, permitiendo desplegarlos en equipos con diversas capacidades computacionales de manera eficiente, siendo el objetivo la ejecución sobre una Raspberry Pi 4B (4 GB RAM), con lo que se demuestra que es posible desplegar modelos de inteligencia artificial avanzada en hardware accesible y de bajo consumo energético. Las pruebas de concepto arrojan una tasa de éxito integral del XXXXX\% en condiciones diurnas y del XXXXXX\% en condiciones nocturnas, con una latencia promedio de XXXXXX ms por imagen, con modelos mínimamente entrenados (2,559 imágenes durante 14 épocas para el detector de placas y 232,000 imágenes durante 115 épocas para el detector de caracteres). El sistema cumple con los principios de uso ético de datos, reproducibilidad total y escalabilidad, siendo una alternativa viable para el entrenamiento de modelos más complejos en aplicaciones del mundo real.
+
+\subsection*{Propuesta de Valor}
+Nuestra propuesta pretende fomentar el desarrollo de software especializado en reconocimiento de matrículas utilizando hardware accesible (Raspberry Pi 4B con cámara USB o CSI) pudiendo ser, hasta nuestro conocimiento, la primera implementación nativa de código libre que propone y libera una base de datos sintética de matrículas mexicanas. La solución se ha diseñado con énfasis en el uso ético de los datos, ya que todo el entrenamiento se realiza con elementos virtuales, evitando la captura y almacenamiento de imágenes reales de ciudadanos, pudiendo escalarse con muestras obtenidas del mundo real.
+
+\subsection*{Arquitectura}
+El sistema se organiza en cinco módulos que pueden actualizarse o sustituirse de forma independiente:
+\begin{enumerate}
+    \item \textbf{MLP-Generator}: motor de generación procedimental que produce matrículas sintéticas respetando colores, rangos alfanuméricos y diseños de cada estado.
+    \item \textbf{MLP-Augmentator}: aplica 29 transformaciones geométricas, degradaciones ópticas y ajustes fotométricos (rotación, desenfoque, lluvia, niebla, ruido, oclusión, etc.) para simular condiciones reales de captura.
+    \item \textbf{MLP-Detector}: basado en YOLOv11s, localiza la región de la matrícula en imágenes de escena completa.
+    \item \textbf{MLP-Recognizer}: emplea una arquitectura Compact Convolutional Transformer basada en FastPlateOCR para el reconocimiento de los caracteres.
+    \item \textbf{MLP-Pipeline}: integra la detección, el reconocimiento y la consulta a una base de datos SQLite que asocia cada matrícula con información vehicular sintética (propietario, estado legal, fecha de registro, etc.).
+\end{enumerate}
+
+Todos los modelos entrenados (MLP-Detector y MLP-Recognizer) se exportan al formato de intercambio de datos ONNX, lo que permite desacoplar la fase de entrenamiento (realizada en una máquina de escritorio con GPU) de la fase de inferencia (ejecutada en una Raspberry Pi), garantizando portabilidad y eficiencia en dispositivos de bajo costo.
+
+\subsection*{Resultados Clave}
+La evaluación del sistema se realizó sobre un conjunto de 100 imágenes reales (50 diurnas, 50 nocturnas) y arrojó los siguientes indicadores:
+
+\begin{itemize}
+    \item Tasa de éxito global (detección + reconocimiento + consulta a BD): XXXXXX\% diurno, XXXX\% nocturno.
+    \item Precisión del detector: XXXXXX\% (promedio ponderado).
+    \item Precisión del reconocedor por matrícula completa: XXXXXX\% diurno, XXXXXX\% nocturno.
+    \item Latencia media total (Raspberry Pi 4B): XXXXXX ms por imagen.
+    \item Cumplimiento normativo del 100\% en las matrículas generadas (validado mediante verificación de rangos estatales y exclusión de caracteres conforme la norma).
+\end{itemize}
+
+Estos resultados demuestran que un sistema LPR completo puede ejecutarse en hardware de bajo consumo, abriendo la puerta a aplicaciones de seguridad en entornos con recursos limitados.
+
+\subsection*{Ventajas Competitivas}
+Frente a los sistemas tradicionales de reconocimiento de matrículas, LPR-Sentinel ofrece las siguientes diferencias:
+
+\begin{itemize}
+    \item \textbf{Datos de entrenamiento}: sintéticos, sin problemas éticos ni legales, frente a la dependencia de imágenes reales y anotaciones manuales, generalmente producidas con matrículas extranjeras.
+    \item \textbf{Hardware mínimo requerido}: Raspberry Pi 4B (cuyo consumo energético es menor a 5 W), en lugar de servidores GPU o equipos de alta gama.
+    \item \textbf{Adaptabilidad a México}: diseñado específicamente para la NOM-001-SCT-2-2016, respetando rangos estatales y variaciones de formato (actualmente solo enfocado en las matrículas de vehículos particulares).
+    \item \textbf{Despliegue}: formato ONNX portable, independiente del framework de entrenamiento.
+    \item \textbf{Modularidad}: cinco componentes independientes que permiten mejoras incrementales sin rediseñar el sistema completo.
+\end{itemize}
+
+\subsection*{Siguientes pasos y escalabilidad}
+El equipo planea las siguientes acciones para madurar el sistema:
+
+\begin{enumerate}
+    \item Validación en colaboración con autoridades de tránsito y cuerpos de seguridad, ampliando el conjunto de imágenes reales a los 32 estados.
+    \item Incorporación de seguimiento temporal (tracking) para asociar detecciones en secuencias de video y mejorar la fiabilidad.
+    \item Extensión del generador sintético a otros tipos de vehículos (servicio público, gobierno, discapacidad, carga) sin modificar la arquitectura del pipeline.
+\end{enumerate}
+
+\vspace{1cm}
+\noindent\textbf{Contacto del desarrollador:} \\
+Gustavo Adolfo Murillo\\
+ga.murillogutierrez@outlook.com\\
+462 400 2500 \\
+Irapuato, Guanajuato. \\
+Repositorio público: \url{[URL a liberar tras concurso]} \\
+Video demostración: \url{[enlace]}
+%endregion
