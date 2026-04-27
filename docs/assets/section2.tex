@@ -27,7 +27,7 @@ De acuerdo con la norma, los caracteres utilizados incluyen todos los guarismos 
 
 \begin{figure}[ht]
 \centering
-\includegraphics[width=0.85\textwidth]{figures/matriculas_sinteticas.png}
+\includegraphics[width=0.65\textwidth]{figures/matriculas_sinteticas.png}
 \caption[Ejemplos de matrículas sintéticas generadas por MLP-Generator]{Ejemplos de matrículas sintéticas generadas por MLP-Generator. Fila superior: Aguascalientes, Coahuila y Michoacán (formato LLL-NNN-L). Fila inferior: Ciudad de México (LNN-LLL) y Guanajuato (LLL-NN-LL).}
 \label{fig_generacion_placas}
 \end{figure}
@@ -39,7 +39,7 @@ Al no disponer de la fuente tipográfica oficial, se diseñó una fuente de auto
 
 \begin{figure}[ht]
 \centering
-\includegraphics[width=0.6\textwidth]{figures/fig_fuente_TTF.pdf}
+\includegraphics[width=0.5\textwidth]{figures/fig_fuente_TTF.pdf}
 \caption[Diccionario de la fuente tipográfica]{Diccionario de la fuente tipográfica diseñada, que incluye los 33 caracteres permitidos por la NOM-001-SCT-2-2016 (dígitos 0-9, letras mayúsculas excluyendo I, Ñ, O, Q, y el guion). Las cotas dimensionales se expresan en milímetros.}
 \label{fig_fuente_TTF}
 \end{figure}
@@ -126,8 +126,8 @@ Cabe mencionar que este segundo módulo es también parametrizable y toma como r
 
 \begin{figure}[ht]
 \centering
-% \includegraphics[width=0.85\textwidth]{figures/lpr_sentinel_pipeline.png}
-\caption[Flujo de operación en MLP-Detector]{Flujo de operación en MLP-Detector.}
+\includegraphics[width=0.85\textwidth]{figures/flujo_detector.png}
+\caption[Flujo de operación del módulo MLP-Detector]{Flujo de operación del módulo MLP-Detector. El módulo recibe una imagen completa ($1900\times 1200$ px), escala la imagen original a una dimensión de $640\times 640$ px y regresa la región de interés (ROI) donde se encuentra la placa vehicular con un tamaño de $140\times 70$ px.}
 \label{fig_detector}
 \end{figure}
 
