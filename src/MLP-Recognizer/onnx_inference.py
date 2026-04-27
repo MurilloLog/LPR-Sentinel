@@ -1,31 +1,19 @@
-"""
-Modulo de inferencia para reconocimiento de placas vehiculares usando ONNX.
-Replica exactamente el preprocesamiento del modelo Keras original.
-"""
-
 import os
 import argparse
 import cv2
 import numpy as np
 import yaml
 import onnxruntime as ort
+import time
 
-
-# -----------------------------------------------------------------------------
-# Constantes de configuracion
-# -----------------------------------------------------------------------------
-
-MODEL_ONNX_PATH = "best.onnx"
+# Constantes del modelo
+MODEL_ONNX_PATH = "./models/best.onnx"
 PLATE_CONFIG_PATH = "./config/plate_config.yaml"
 
-
-# -----------------------------------------------------------------------------
 # Funciones de configuracion
-# -----------------------------------------------------------------------------
-
 def load_plate_config(config_path):
     """
-    Carga la configuracion de placas desde un archivo YAML.
+    Carga la configuracion de placas desde un archivo YAML conforme el modelo fue entrenado.
     """
     with open(config_path, 'r') as f:
         config = yaml.safe_load(f)
@@ -41,17 +29,10 @@ def load_plate_config(config_path):
         'image_color_mode': config.get('image_color_mode', 'grayscale')
     }
 
-
-# -----------------------------------------------------------------------------
-# Preprocesamiento de imagenes (EXACTAMENTE IGUAL que en Keras)
-# -----------------------------------------------------------------------------
-
+# Preprocesamiento de la imagen de entrada
 def preprocess_image_onnx(img_path, config):
     """
-    Preprocesa una imagen EXACTAMENTE como lo hace el modelo Keras original.
-    
-    IMPORTANTE: El modelo Keras tiene una capa Rescaling que divide por 255,
-    por lo que NO debemos normalizar aquí. Solo redimensionar y mantener valores [0-255].
+    Preprocesa una imagen para garantizar el tamaño esperado.
     
     Parametros
     ----------
@@ -71,7 +52,7 @@ def preprocess_image_onnx(img_path, config):
     if img is None:
         raise FileNotFoundError(f"No se encontro la imagen: {img_path}")
     
-    # Convertir a escala de grises si es necesario
+    # Convertir a escala de grises de no estarlo
     if config['image_color_mode'] == 'grayscale':
         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     else:
@@ -80,7 +61,7 @@ def preprocess_image_onnx(img_path, config):
     target_h = config['img_height']
     target_w = config['img_width']
     
-    # Redimensionar manteniendo aspect ratio (exactamente como en el código Keras)
+    # Redimensionar la imagen sin deformar
     if config['keep_aspect_ratio']:
         h, w = img.shape[:2]
         aspect = w / h
@@ -92,7 +73,7 @@ def preprocess_image_onnx(img_path, config):
             new_h = target_h
             new_w = int(target_h * aspect)
         
-        # Interpolación
+        # Interpolacion lineal
         if config['interpolation'] == 'linear':
             interpolation = cv2.INTER_LINEAR
         else:
@@ -116,7 +97,7 @@ def preprocess_image_onnx(img_path, config):
         # Redimensionar directamente sin mantener aspect ratio
         img_processed = cv2.resize(img, (target_w, target_h))
     
-    # IMPORTANTE: NO normalizar aquí porque el modelo tiene capa Rescaling
+    # NO normalizar aqui porque el modelo tiene capa Rescaling
     # Solo convertir a float32 y mantener valores en [0-255]
     img_processed = img_processed.astype(np.float32)
     
@@ -124,21 +105,16 @@ def preprocess_image_onnx(img_path, config):
     if config['image_color_mode'] == 'grayscale' and len(img_processed.shape) == 2:
         img_processed = np.expand_dims(img_processed, axis=-1)
     
-    # Agregar dimensión de batch
+    # Agregar dimension de batch
     img_processed = np.expand_dims(img_processed, axis=0)
     
     return img_processed
 
-
-# -----------------------------------------------------------------------------
 # Funciones de inferencia
-# -----------------------------------------------------------------------------
-
 def softmax(x):
     """Aplica softmax a un array."""
     exp_x = np.exp(x - np.max(x, axis=-1, keepdims=True))
     return exp_x / np.sum(exp_x, axis=-1, keepdims=True)
-
 
 def decode_prediction(predictions, alphabet):
     """
@@ -159,7 +135,7 @@ def decode_prediction(predictions, alphabet):
     # Aplicar softmax a las predicciones
     probs = softmax(predictions[0])
     
-    # Obtener índices con mayor probabilidad
+    # Obtener indices con mayor probabilidad
     pred_indices = np.argmax(probs, axis=-1)
     
     chars = []
@@ -175,11 +151,7 @@ def decode_prediction(predictions, alphabet):
     plate_text = "".join(chars)
     return plate_text, confidences, pred_indices, probs
 
-
-# -----------------------------------------------------------------------------
-# Punto de entrada principal
-# -----------------------------------------------------------------------------
-
+#region main
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='FastPlateOCR ONNX inferencer')
     parser.add_argument('--input_dir', type=str, required=True, help='Imagen de entrada')
@@ -188,51 +160,47 @@ if __name__ == "__main__":
     test_image = args.input_dir
     
     try:
-        # Cargar configuración
-        print("\n[1/4] Cargando configuración...")
+        # Cargar configuracion del modelo
         config = load_plate_config(PLATE_CONFIG_PATH)
         alphabet = config['alphabet']
-        print(f"  - Alphabet: {alphabet}")
-        print(f"  - Image size: {config['img_height']}x{config['img_width']}")
+        #print(f"  - Alphabet: {alphabet}")
+        #print(f"  - Image size: {config['img_height']}x{config['img_width']}")
         
         # Cargar modelo ONNX
-        print("\n[2/4] Cargando modelo ONNX...")
         session = ort.InferenceSession(MODEL_ONNX_PATH)
         
-        # Obtener información del modelo
+        # Obtener informacion del modelo
         input_name = session.get_inputs()[0].name
         output_name = session.get_outputs()[0].name
-        print(f"  - Input name: {input_name}")
-        print(f"  - Output name: {output_name}")
-        print(f"  - Input shape: {session.get_inputs()[0].shape}")
+        #print(f"  - Input name: {input_name}")
+        #print(f"  - Output name: {output_name}")
+        #print(f"  - Input shape: {session.get_inputs()[0].shape}")
         
-        # Preprocesar imagen (EXACTAMENTE como en Keras)
-        print("\n[3/4] Preprocesando imagen...")
+        # Preprocesar imagen
+        start = time.time()
         img_processed = preprocess_image_onnx(test_image, config)
-        print(f"  - Input shape: {img_processed.shape}")
-        print(f"  - Value range: [{img_processed.min():.1f}, {img_processed.max():.1f}]")
+        #print(f"  - Input shape: {img_processed.shape}")
+        #print(f"  - Value range: [{img_processed.min():.1f}, {img_processed.max():.1f}]")
         
         # Realizar inferencia
-        print("\n[4/4] Realizando inferencia...")
         predictions = session.run([output_name], {input_name: img_processed})[0]
-        print(f"  - Output shape: {predictions.shape}")
+        #print(f"  - Output shape: {predictions.shape}")
         
-        # Decodificar predicción
+        # Decodificar prediccion
         plate_text, confidences, pred_indices, probs = decode_prediction(predictions, alphabet)
-        
+        end = time.time()
+
         # Mostrar resultados
-        print("\n" + "=" * 60)
-        print("RESULTADO DE INFERENCIA")
-        print("=" * 60)
         print(f"Placa detectada: {plate_text}")
         print(f"Confianza promedio: {np.mean(confidences):.4f}")
+        print(f"Tiempo de inferencia: {end-start:.4f} ms")
         
         # Mostrar confianza por slot
         print("\nConfianza por slot:")
         for i, (char, conf) in enumerate(zip(plate_text, confidences)):
             print(f"  Slot {i+1}: '{char}' - {conf:.4f}")
         
-        # Mostrar top-3 predicciones para cada slot (opcional)
+        # Mostrar top-3 predicciones para cada slot
         print("\nTop-3 predicciones por slot:")
         for slot_idx in range(min(3, len(probs))):  # Mostrar primeros 3 slots
             slot_probs = probs[slot_idx]
@@ -243,20 +211,19 @@ if __name__ == "__main__":
             for char, prob in zip(top3_chars, top3_probs):
                 print(f"    {char}: {prob:.4f}")
         
-        print("=" * 60)
-        
         # Validar que el resultado sea razonable
         if np.mean(confidences) > 0.75:
-            print("\n✅ La confianza es aceptable. La predicción es confiable.")
+            print("\nLa confianza es aceptable. La prediccion es confiable.")
         else:
-            print("\n⚠️ La confianza es baja. Posibles causas:")
+            print("\nLa confianza es baja. Posibles causas:")
             print("   1. La imagen tiene calidad diferente al entrenamiento")
             print("   2. El preprocesamiento no coincide exactamente")
-            print("   3. La imagen tiene mala iluminación o está mal enfocada")
+            print("   3. La imagen tiene mala iluminacion o esta mal enfocada")
         
     except FileNotFoundError as e:
-        print(f"\n❌ Error: {e}")
+        print(f"\nError: {e}")
     except Exception as e:
-        print(f"\n❌ Error al predecir: {e}")
+        print(f"\nError al predecir: {e}")
         import traceback
         traceback.print_exc()
+#endregion
