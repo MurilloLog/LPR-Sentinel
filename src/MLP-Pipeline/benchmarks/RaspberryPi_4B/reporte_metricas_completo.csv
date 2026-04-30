@@ -1,0 +1,30 @@
+Métrica,Valor
+Total imágenes evaluadas,99
+Detecciones exitosas,75
+Tasa de detección,75.76%
+,---
+Accuracy (Caso 1 - todas),45.45%
+Accuracy (Caso 2 - solo detecciones),60.00%
+Mejora al excluir no detectadas,14.55%
+,---
+Precisión (sin FP),100%
+Recall (Caso 1),45.45%
+Recall (Caso 2),60.00%
+F1-Score (Caso 1),62.50%
+F1-Score (Caso 2),75.00%
+,---
+Errores totales,54
+- Sin detección,24
+- OCR incorrecto,30
+,---
+Rendimiento diurno (Caso 2),65.85%
+Rendimiento nocturno (Caso 2),52.94%
+Brecha diurna/nocturna,12.91%
+,---
+Tiempo promedio respuesta,1367.37 ms
+Tiempo mínimo,1193.27 ms
+Tiempo máximo,1879.56 ms
+,---
+Confianza OCR (aciertos),0.0739
+Confianza OCR (fallos),0.0388
+Diferencia de confianza,0.0351
