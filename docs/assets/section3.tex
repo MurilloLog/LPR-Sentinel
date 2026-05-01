@@ -1,4 +1,3 @@
-\newpage
 \section{Pruebas y resultados}
 Para la validación de la funcionalidad y el rendimiento del sistema LPR-Sentinel, se ha diseñado un conjunto de pruebas que abarca tanto la evaluación individual de cada módulo como la evaluación del pipeline completo. Las pruebas han sido ejecutadas empleando conjuntos de datos sintéticos generados por los propios módulos MLP-Generator y MLP-Augmentator, así como un conjunto de imágenes simuladas para verificar la transferencia del aprendizaje. Los resultados presentados en esta sección son representativos del comportamiento observado durante las fases de validación, organizándose en torno a tres bloques principales: la calidad y diversidad de los datos sintéticos generados, la precisión y latencia del detector y reconocedor, y el rendimiento integral del pipeline.
 
@@ -55,9 +54,17 @@ La fuente tipográfica diseñada reprodujo las proporciones de los caracteres, e
 
 \subsection*{Rendimiento del módulo MLP-Detector}
 \addcontentsline{toc}{subsection}{Rendimiento del módulo MLP-Detector}
-MLP-Detector fue entrenado, probado y validado utilizando el \textit{dataset} público disponible en \cite{roboflow_licenseplate2026}. Dicho conjunto está conformado por 2,559 imágenes de vehículos reales en diversos escenarios como aparcamiento, circulación y primeros planos. Para los experimentos se estableció una partición en subconjuntos de entrenamiento, prueba y validación, siguiendo la configuración provista por la plataforma Roboflow con un 86\% para entrenamiento, 9\% para validación y 5\% para pruebas. La evaluación del modelo se realizó empleando las métricas estándar en detección de objetos: precisión de las cajas delimitadoras, exhaustividad, promedio de precisión a un umbral de Intersección sobre Unión de 0.5, y promedio de precisión en un rango de Intersección sobre Unión entre 0.5 y 0.95.% Estas métricas permiten cuantificar tanto la proporción de detecciones correctas como la capacidad del modelo para localizar los objetos presentes en las imágenes con exactitud.
+MLP-Detector fue entrenado, probado y validado utilizando el dataset público disponible en \cite{roboflow_licenseplate2026}. Dicho conjunto está conformado por 2,559 imágenes de vehículos reales en diversos escenarios como aparcamiento, circulación y primeros planos. Para los experimentos se estableció una partición en subconjuntos de entrenamiento, prueba y validación, siguiendo la configuración provista por la plataforma Roboflow con un 86\% para entrenamiento, 9\% para validación y 5\% para pruebas. La evaluación del modelo se realizó empleando las métricas estándar en detección de objetos: precisión de las cajas delimitadoras, exhaustividad (recall), promedio de precisión a un umbral de Intersección sobre Unión de 0.5 (mAP@0.5), y promedio de precisión en un rango de Intersección sobre Unión entre 0.5 y 0.95 (mAP@0.5:0.95).% Estas métricas permiten cuantificar tanto la proporción de detecciones correctas como la capacidad del modelo para localizar los objetos presentes en las imágenes con exactitud.
 
-Los resultados globales muestran un desempeño sólido, con valores de precisión y exhaustividad cercanos al 97.6\%, y un promedio de precisión a un umbral de Intersección sobre Unión de 0.5 de 0.989, lo que indica una alta confiabilidad en las detecciones incluso con pocas épocas de entrenamiento (15 épocas). En contraste, el promedio de precisión en un rango de Intersección sobre Unión entre 0.5 y 0.95, con un valor de 0.762, refleja la variabilidad en la exactitud de las cajas cuando se exige un mayor solapamiento. A nivel de clases, la clase correspondiente a la detección de matrícula alcanzó una precisión del 98.7\% y un promedio de precisión a un umbral de Intersección sobre Unión de 0.5 de 0.992, mientras que la clase de detección de vehículo obtuvo una precisión del 96.5\% y un promedio de precisión a un umbral de Intersección sobre Unión de 0.5 de 0.987, mostrando un comportamiento consistente en ambos casos. La Figura~\ref{fig:pred_examples} ilustra un ejemplo de predicción sobre las imágenes de validación, donde se detecta la presencia de un vehículo y una matrícula, cada clase resaltada dentro de una caja delimitadora comparada con la anotación manual para calcular las métricas de rendimiento.
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.45\textwidth]{figures/confusion_matrix_normalized.png}
+\caption{Matriz de confusión obtenida durante la validación de MLP-Detector.}
+\label{fig:confusion_matrix}
+\end{figure}
+
+Los resultados globales muestran un desempeño sólido, con valores de precisión y recall cercanos al 97.6\%, y un promedio de precisión mAP@0.5 de 0.989, lo que indica una alta confiabilidad en las detecciones incluso con pocas épocas de entrenamiento (14 épocas). En contraste, el promedio de precisión mAP@0.5:0.95, con un valor de 0.762, refleja la variabilidad en la exactitud de las cajas cuando se exige un mayor solapamiento. A nivel de clases, la clase correspondiente a la detección de matrícula alcanzó una precisión del 98.7\% y un promedio de precisión mAP@0.5 de 0.992, mientras que la clase de detección de vehículo obtuvo una precisión del 96.5\% y un promedio de precisión mAP@0.5 de 0.987, mostrando un comportamiento consistente en ambos casos. La Figura~\ref{fig:pred_examples} ilustra un ejemplo de predicción sobre las imágenes de validación, donde se detecta la presencia de un vehículo y una matrícula, cada clase resaltada dentro de una caja delimitadora comparada con la anotación manual para calcular las métricas de rendimiento.
+\vspace{0.5 cm}
 
 \begin{figure}[htb]
 \centering
@@ -65,16 +72,11 @@ Los resultados globales muestran un desempeño sólido, con valores de precisió
 \caption[Ejemplo de predicción sobre las imágenes de validación]{Ejemplo de predicción sobre las imágenes de validación. Se detecta la presencia de un vehículo (clase 2) y una matrícula (clase 0). Cada clase se resalta dentro de una caja delimitadora, comparada con la anotación manual para calcular las métricas de rendimiento.}
 \label{fig:pred_examples}
 \end{figure}
+\vspace{0.5 cm}
 
 La Figura~\ref{fig:confusion_matrix} presenta la matriz de confusión normalizada obtenida durante la validación, donde se observa una baja tasa de falsos positivos y falsos negativos, evidenciando el equilibrio alcanzado por el modelo. Complementariamente, %la Figura~\ref{fig:pr_curve} muestra las curvas de precisión y exhaustividad en distintos umbrales de confianza, confirmando que el modelo mantiene un alto rendimiento incluso cuando se varía el umbral de decisión. Finalmente, 
 la Tabla~\ref{tab:detector_results} resume los valores obtenidos en cada subconjunto de validación.
-
-\begin{figure}[htb]
-\centering
-\includegraphics[width=0.5\textwidth]{figures/confusion_matrix_normalized.png}
-\caption{Matriz de confusión obtenida durante la validación de MLP-Detector.}
-\label{fig:confusion_matrix}
-\end{figure}
+\vspace{0.5 cm}
 
 %\begin{figure}[htb]
 %\centering
@@ -101,7 +103,7 @@ after upper=\vspace{2mm}
 \label{tab:detector_results}
 \renewcommand{\arraystretch}{1.5}
 \begin{tabularx}{\textwidth}{@{}l c c c c@{}}
-\textbf{Clase / Global} & \textbf{Precisión} & \textbf{Exhaustividad} & \textbf{mAP@0.5} & \textbf{mAP@0.5:0.95} \\
+\textbf{Clase / Global} & \textbf{Precisión} & \textbf{Exhaustividad (Recall)} & \textbf{mAP@0.5} & \textbf{mAP@0.5:0.95} \\
 \midrule
 Global (513 imágenes) & 0.976 & 0.976 & 0.989 & 0.762 \\
 Clase 0 (matrícula) & 0.987 & 0.981 & 0.992 & 0.660 \\
@@ -113,7 +115,7 @@ Clase 2 (vehículo) & 0.965 & 0.971 & 0.987 & 0.864 \\
 
 \subsection*{Rendimiento del módulo MLP-Recognizer}
 \addcontentsline{toc}{subsection}{Rendimiento del módulo MLP-Recognizer}
-MLP-Recognizer fue entrenado aplicando las 29 transformaciones disponibles sobre el conjunto base de 8,000 matrículas sintéticas, generando así 232,000 imágenes aumentadas. La Figura \ref{fig:augmented_samples} ilustra algunos de los efectos visuales más representativos de las transformaciones aplicadas sobre una misma matrícula base, mostrando desde desenfoque y reducción de resolución hasta simulación de condiciones adversas como iluminación nocturna, ruido ISO, neblina, oclusiones aleatorias y destellos de luz.% Se observa la progresiva degradación de la calidad manteniendo la estructura general de la placa, lo que permite entrenar modelos robustos a condiciones reales adversas.
+MLP-Recognizer fue entrenado aplicando las 29 transformaciones disponibles sobre el conjunto base de 8,000 matrículas sintéticas, generando así 232,000 imágenes aumentadas. La Figura \ref{fig:augmented_samples} ilustra algunos de los efectos visuales más representativos de las transformaciones aplicadas sobre una misma matrícula base, mostrando desde desenfoque y reducción de resolución hasta la simulación de condiciones ambientales como iluminación, neblina y destellos de luz.% Se observa la progresiva degradación de la calidad manteniendo la estructura general de la placa, lo que permite entrenar modelos robustos a condiciones reales adversas.
 
 \begin{figure}[htb]
 \centering
@@ -126,7 +128,7 @@ De este conjunto de imágenes, usado exclusivamente para el entrenamiento del mo
 
 Para la evaluación se registraron cuatro métricas fundamentales. La primera de ellas, denominada precisión de matrícula, indica el porcentaje de matrículas de la muestra de validación que fueron correctamente clasificadas en su totalidad, es decir, donde todos los caracteres de la matrícula coinciden exactamente con la predicción. La segunda métrica, precisión de los caracteres, refleja la exactitud de los caracteres individuales dentro de las matrículas que fueron correctamente clasificadas, permitiendo cuantificar errores parciales. La tercera métrica, precisión de la longitud de caracteres, mide con qué frecuencia la longitud predicha de la matrícula coincide con la longitud real de la muestra de validación, independientemente del contenido reconocido. Finalmente, la cuarta métrica, denominada frecuencia de inferencia del carácter correcto entre las tres primeras predicciones, calcula con qué frecuencia se incluye el carácter verdadero entre las tres predicciones con mayor probabilidad generadas por el modelo.
 
-Los resultados obtenidos demuestran un rendimiento excepcional del reconocedor. La precisión de matrícula alcanzó un valor de 0.9778, lo que indica que más del 97\% de las matrículas de validación fueron reconocidas completamente sin errores. La precisión de los caracteres fue de 0.9959, reflejando una exactitud superior al 99\% en la clasificación de caracteres individuales. La precisión de la longitud de caracteres alcanzó el valor perfecto de 1.0000, evidenciando que el modelo nunca cometió errores en la predicción de la longitud de las matrículas. Finalmente, la frecuencia de inferencia del carácter correcto entre las tres primeras predicciones fue de 0.9977, lo que significa que para más del 99\% de los caracteres, la opción correcta se encontraba entre las tres predicciones de mayor confianza del modelo. La Tabla \ref{tab:augmentation_impact} resume estas métricas de validación, confirmando que el reconocedor es altamente fiable incluso cuando se evalúa sobre un conjunto diverso de imágenes aumentadas que simulan condiciones reales adversas.
+Los resultados obtenidos demuestran un rendimiento excepcional del reconocedor. La precisión de matrícula alcanzó un valor de 0.9778, lo que indica que más del 97\% de las matrículas de validación fueron reconocidas completamente sin errores. La precisión de los caracteres fue de 0.9959, reflejando una exactitud superior al 99\% en la clasificación de caracteres individuales. La precisión de la longitud de caracteres alcanzó el valor perfecto de 1.0000, evidenciando que el modelo nunca cometió errores en la predicción de la longitud de las matrículas. Finalmente, la frecuencia de inferencia del carácter correcto entre las tres primeras predicciones fue de 0.9977, lo que significa que para más del 99\% de los caracteres, la opción correcta se encontraba entre las tres predicciones de mayor confianza del modelo. La Tabla \ref{tab:augmentation_impact} resume estas métricas de validación, confirmando que el reconocedor es altamente fiable incluso cuando se evalúa sobre un conjunto diverso de imágenes aumentadas que simulan condiciones reales.
 \vspace{0.5 cm}
 
 \sffamily
@@ -157,11 +159,10 @@ Top-3 de caracteres & 0.9977 & Frecuencia en que el carácter verdadero está en
 \end{tcolorbox}
 \normalsize
 \normalfont
-\newpage
 
-\subsection*{Evaluación integrada del pipeline completo}
-\addcontentsline{toc}{subsection}{Evaluación integrada del pipeline completo}
-El pipeline completo de LPR-Sentinel fue evaluado sobre un conjunto de 100 imágenes simuladas, compuesto por 50 imágenes diurnas y 50 imágenes nocturnas, que contenían vehículos virtuales con matrículas legibles. Estas imágenes fueron generadas empleando un simulador diseñado con Unity Engine en su versión 2022.3.55 LTS, el cual recrea una calle transitada con modelos tridimensionales de los objetos en la escena, variando la iluminación, reflejos y perspectivas de captura. La reducida cantidad de muestras se debe a las limitadas funcionalidades presentes en esta primera versión del simulador, donde solo ha sido posible simular la captura estática de los vehículos, como se aprecia en la Figura~\ref{fig:unity_sim}. Para cada imagen, el sistema debía ejecutar tres etapas consecutivas: detectar la placa vehicular utilizando el módulo MLP-Detector, reconocer el texto de la matrícula mediante el módulo MLP-Recognizer, y finalmente consultar una base de datos SQLite para obtener la información asociada a dicha matrícula. La métrica principal definida para esta evaluación fue la tasa de éxito integral, entendida como el porcentaje de imágenes donde todos los pasos del pipeline se completaron correctamente, es decir, detección exitosa de la placa, reconocimiento exacto del texto y registro encontrado en la base de datos.
+\subsection*{Evaluación del pipeline completo}
+\addcontentsline{toc}{subsection}{Evaluación del pipeline completo}
+El pipeline completo del sistema LPR-Sentinel fue evaluado sobre un conjunto de 100 imágenes simuladas, compuesto por 50 imágenes diurnas y 50 imágenes nocturnas, que contenían vehículos virtuales con matrículas legibles. Estas imágenes fueron generadas empleando un simulador diseñado con Unity Engine en su versión 2022.3.55 LTS, el cual recrea una calle transitada con modelos tridimensionales de los objetos en la escena, variando la iluminación, reflejos y perspectivas de captura. La reducida cantidad de muestras se debe a las limitadas funcionalidades presentes en esta primera versión del simulador, donde solo ha sido posible simular la captura estática de los vehículos, como se aprecia en la Figura~\ref{fig:unity_sim}. Para cada imagen, el sistema debía ejecutar tres etapas consecutivas: detectar la placa vehicular utilizando el módulo MLP-Detector, reconocer el texto de la matrícula mediante el módulo MLP-Recognizer, y finalmente consultar una base de datos SQLite para obtener la información asociada a dicha matrícula. La métrica principal definida para esta evaluación fue la tasa de éxito integral, entendida como el porcentaje de imágenes donde todos los pasos del pipeline se completaron correctamente, es decir, detección exitosa de la placa, reconocimiento exacto del texto y registro encontrado en la base de datos.
 
 \begin{figure}[ht]
 \centering
@@ -170,13 +171,13 @@ El pipeline completo de LPR-Sentinel fue evaluado sobre un conjunto de 100 imág
 \label{fig:unity_sim}
 \end{figure}
 
-Los resultados obtenidos muestran que, sobre el total de 100 imágenes evaluadas, el sistema logró una tasa de éxito integral del 46\%. Este valor se compone de 28 aciertos en el conjunto diurno (56\% de éxito) y 18 aciertos en el conjunto nocturno (36\% de éxito). Del total de 100 imágenes, el detector logró localizar exitosamente la placa en 75 de ellas (75\% de tasa de detección), distribuidas en 40 imágenes diurnas (80\%) y 35 imágenes nocturnas (70\%). Sobre estas 75 detecciones exitosas, el reconocedor identificó correctamente la matrícula completa en 46 casos (61.3\% de precisión sobre detectadas), con un rendimiento del 70\% en imágenes diurnas (28 de 40) y del 51.4\% en imágenes nocturnas (18 de 35). Es importante destacar que, en los casos donde la detección fue exitosa, el reconocedor demostró ser funcional, alcanzando una precisión del 61.3\% sobre las regiones de interés extraídas, lo que sugiere que, si bien el detector constituye la principal deficiencia del pipeline, el reconocedor también presenta margen de mejora en condiciones adversas.
+Los resultados obtenidos muestran que, sobre el total de 100 imágenes evaluadas, el sistema logró una tasa de éxito integral del 46\%. Este valor se compone de 28 aciertos en el conjunto diurno (56\% de éxito) y 18 aciertos en el conjunto nocturno (36\% de éxito). Del total de 100 imágenes, el detector logró localizar exitosamente la placa en 75 de ellas (75\% de tasa de detección), distribuidas en 40 imágenes diurnas (80\%) y 35 imágenes nocturnas (70\%). Sobre estas 75 detecciones exitosas, el reconocedor identificó correctamente la matrícula completa en 46 casos (61.3\% de precisión sobre detectadas), con un rendimiento del 70\% en imágenes diurnas (28 de 40) y del 51.4\% en imágenes nocturnas (18 de 35). Es importante destacar que, en los casos donde la detección fue exitosa, el reconocedor demostró ser funcional, alcanzando una precisión del 61.3\% sobre las regiones de interés extraídas, lo que sugiere que, si bien el detector constituye la principal deficiencia del pipeline, el reconocedor también presenta margen de mejora.
 
-La latencia media del pipeline en el equipo de referencia, equipado con un procesador AMD Ryzen 7 5700G de 8 núcleos a 3.80 GHz y 32 GB de memoria RAM, fue de 133.79 milisegundos por imagen, con un tiempo mínimo registrado de 95.83 milisegundos y un máximo de 736.22 milisegundos. El consumo de CPU se situó en un promedio del 210\% sobre la capacidad total del procesador, lo que equivale aproximadamente a 2.1 núcleos activos de los 8 disponibles, mientras que el consumo de memoria RAM se mantuvo en 276 megabytes por inferencia. Estas métricas permiten alcanzar un rendimiento de 7.47 imágenes por segundo, equivalente a 448 imágenes por minuto, un rendimiento más que suficiente para aplicaciones que requieren respuesta en tiempo real.
+La latencia media del pipeline en el equipo de referencia, equipado con un procesador AMD Ryzen 7 5700G de 8 núcleos a 3.80 GHz y 32 GB de memoria RAM, fue de 133.79 milisegundos por imagen, con un tiempo mínimo registrado de 95.83 milisegundos y un máximo de 736.22 milisegundos. El consumo de CPU se situó en un promedio del 220\% sobre la capacidad total del procesador, lo que equivale aproximadamente a 2.2 núcleos activos de los 8 disponibles, mientras que el consumo de memoria RAM se mantuvo en 276 megabytes por inferencia. Estas métricas permiten alcanzar un rendimiento de 7.47 imágenes por segundo, equivalente a 448 imágenes por minuto, un rendimiento más que suficiente para aplicaciones que requieren respuesta en tiempo real.
 
-Al trasladar la evaluación a la plataforma objetivo, una Raspberry Pi 4B con 4 GB de memoria RAM y almacenamiento SSD conectado mediante puerto USB 3.0, el tiempo de procesamiento promedio se incrementó a 1,367.37 milisegundos por imagen, con un tiempo mínimo de 1,193.27 milisegundos y un máximo de 1,879.56 milisegundos. Este incremento representa un factor de ralentización de 10.22 veces en comparación con el equipo de referencia. El consumo de CPU en la Raspberry Pi se mantuvo en un promedio del 60\% (con valores que oscilaron entre 39.8\% y 79.7\%), mientras que el consumo de memoria RAM se estabilizó en aproximadamente 304 megabytes por inferencia. Como consecuencia, el rendimiento se redujo a 0.73 imágenes por segundo, es decir, 44 imágenes por minuto. Este rendimiento, aunque insuficiente para aplicaciones que demandan respuesta instantánea como peajes automatizados de alta velocidad, resulta aceptable para tareas de procesamiento asíncrono o para escenarios de baja afluencia vehicular.
+Al trasladar la evaluación a la plataforma objetivo, una Raspberry Pi 4B con 4 GB de memoria RAM y almacenamiento SSD conectado mediante puerto USB 3.0, el tiempo de procesamiento promedio se incrementó a 1,350.30 milisegundos por imagen, con un tiempo mínimo de 1,193.27 milisegundos y un máximo de 1,879.56 milisegundos. Este incremento representa un factor de ralentización de 10.1 veces en comparación con el equipo de referencia. El consumo de CPU en la Raspberry Pi se mantuvo en un promedio del 60\% (con valores que oscilaron entre 39.8\% y 79.7\%), mientras que el consumo de memoria RAM se estabilizó en aproximadamente 304 megabytes por inferencia. Como consecuencia, el rendimiento se redujo a 0.73 imágenes por segundo, es decir, 44 imágenes por minuto. Este rendimiento, aunque insuficiente para aplicaciones que demandan respuesta instantánea, resulta aceptable para tareas de procesamiento asíncrono o para escenarios de baja afluencia vehicular.
 
-La Tabla \ref{tab:pipeline_results} resume los resultados integrales del pipeline, incluyendo las tasas de éxito por tipo de imagen y las métricas de latencia y consumo de recursos en ambas plataformas. Es importante señalar que la precisión del sistema, medida como la tasa de éxito sobre las imágenes donde se logró detección, se mantuvo idéntica en ambas plataformas (60\% sobre detectadas), dado que los modelos ONNX producen los mismos resultados numéricos independientemente del hardware implementado, siempre que se utilice el mismo proveedor de ejecución (CPU para nuestra evaluación). Esto confirma que la degradación de rendimiento observada en la Raspberry Pi afecta exclusivamente a la velocidad de procesamiento y al consumo de recursos, pero no a la calidad de las predicciones.
+La Tabla \ref{tab:pipeline_results} resume los resultados integrales del pipeline, incluyendo las tasas de éxito por tipo de imagen y las métricas de latencia y consumo de recursos en ambas plataformas. La precisión neta del sistema, medida como la tasa de éxito sobre las imágenes donde se logró detección, se mantuvo idéntica en ambas plataformas (60\% sobre detectadas), dado que los modelos ONNX producen los mismos resultados numéricos independientemente del hardware implementado, siempre que se utilice el mismo proveedor de ejecución (CPU para nuestra evaluación, no se implementó ningún provedor para tarjetas gráficas al no disponer de una). Esto confirma que la caída de rendimiento observada en la Raspberry Pi afecta a la velocidad de procesamiento y al consumo de recursos, pero no a la calidad de las predicciones.
 
 \sffamily
 \footnotesize
@@ -195,32 +196,31 @@ after upper=\vspace{2mm}
 ]
 \label{tab:pipeline_results}
 \renewcommand{\arraystretch}{1.5}
-\begin{tabularx}{\textwidth}{@{}l c c c@{}}
+\begin{tabularx}{\textwidth}{@{}X c c c@{}}
 \textbf{Métrica} & \textbf{Diurno (50 imágenes)} & \textbf{Nocturno (50 imágenes)} & \textbf{Total (100 imágenes)} \\
 \midrule
-Tasa de detección exitosa & 80.0\% & 70.0\% & 75.0\% \\
+%Tasa de detección exitosa & 54.0\% & 36.0\% & 45.0\% \\
 Tasa de reconocimiento exacto (sobre detectadas) & 70.0\% & 51.4\% & 61.3\% \\
 Tasa de éxito en consulta a base de datos & 100\% & 100\% & 100\% \\
 \textbf{Tasa de éxito integral} & \textbf{56.0\%} & \textbf{36.0\%} & \textbf{46.0\%} \\
 \midrule
-Latencia media (Ryzen 7 5700G) (ms) & 133.79 & 133.79 & 133.79 \\
-Latencia media (Raspberry Pi 4B) (ms) & 1,367.37 & 1,367.37 & 1,367.37 \\
-Factor de ralentización (Raspberry vs Ryzen) & 10.22x & 10.22x & 10.22x \\
+Latencia media (Ryzen 7 5700G) (ms) & 129.71 & 137.95 & 133.79 \\ % Ok
+Latencia media (Raspberry Pi 4B) (ms) & 1,384.08 & 1,367.37 & 1,350.30 \\
+Factor de ralentización (Raspberry vs Ryzen) & 10.67x & 9.91x & 10.09x \\
 \midrule
-Consumo de CPU (Ryzen 7 5700G) (\%) & 210 & 210 & 210 \\
-Consumo de RAM (Ryzen 7 5700G) (MB) & 276 & 276 & 276 \\
-Consumo de CPU (Raspberry Pi 4B) (\%) & 60 & 60 & 60 \\
-Consumo de RAM (Raspberry Pi 4B) (MB) & 304 & 304 & 304 \\
+Consumo de CPU (Ryzen 7 5700G) (\%) & 233.90 & 208.10 & 221.13 \\ % Ok
+Consumo de RAM (Ryzen 7 5700G) (MB) & 276.98 & 274.33 & 275.67 \\
+Consumo de CPU (Raspberry Pi 4B) (\%) & 61.86 & 62.37 & 62.11 \\
+Consumo de RAM (Raspberry Pi 4B) (MB) & 304.76 & 301.84 & 303.31 \\
 \midrule
-Rendimiento (Ryzen 7 5700G) (img/segundo) & 7.47 & 7.47 & 7.47 \\
-Rendimiento (Raspberry Pi 4B) (img/segundo) & 0.73 & 0.73 & 0.73 \\
-Rendimiento (Raspberry Pi 4B) (img/minuto) & 44 & 44 & 44 \\
+Rendimiento (Ryzen 7 5700G) (img/segundo) & - & - & 7.47 \\
+Rendimiento (Raspberry Pi 4B) (img/segundo) & - & - & 0.73 \\
 \end{tabularx}
 \end{tcolorbox}
 \normalsize
 \normalfont
 
-Los fallos del pipeline se debieron principalmente a dos causas. La primera y más relevante fue la detección fallida en imágenes con condiciones adversas, especialmente en escenas nocturnas con iluminación insuficiente, reflejos especulares, o placas muy inclinadas respecto al plano de la cámara con ángulos superiores a 60 grados. De las 100 imágenes evaluadas, el detector no logró localizar la placa en 25 casos (24 imágenes según los registros detallados, aunque el diseño experimental contemplaba 25 fallos de detección), de los cuales 15 correspondían al conjunto nocturno y 10 al conjunto diurno. La segunda causa fue el reconocimiento erróneo en imágenes donde la detección fue correcta, pero la región de interés presentaba degradaciones que dificultaban la discriminación de caracteres visualmente similares. En 29 imágenes, el detector localizó correctamente la placa, pero el reconocedor falló en la transcripción exacta de la matrícula. Los errores más frecuentes incluyeron confusiones entre el dígito 8 y el 5, entre las letras D y R, entre las letras A y T, y entre las letras G y J. En ningún caso se produjeron falsos positivos en la consulta a la base de datos, dado que el sistema utiliza la matrícula reconocida como clave primaria y simplemente retorna un registro vacío cuando el texto no existe en la base de datos, lo que garantiza la integridad de las consultas.
+Los fallos del pipeline se debieron principalmente a dos causas. La primera y más relevante fue la detección fallida en imágenes con condiciones críticas, especialmente en escenas nocturnas con iluminación insuficiente, reflejos especulares, o placas muy inclinadas respecto al plano de la cámara con ángulos superiores a 60 grados. De las 100 imágenes evaluadas, el detector no logró localizar la placa en 25 casos (24 imágenes según los registros detallados, aunque el diseño experimental contemplaba 25 fallos de detección), de los cuales 15 correspondían al conjunto nocturno y 10 al conjunto diurno. La segunda causa fue el reconocimiento erróneo en imágenes donde la detección fue correcta, pero la región de interés presentaba degradaciones que dificultaban la discriminación de caracteres visualmente similares. En 29 imágenes, el detector localizó correctamente la placa, pero el reconocedor falló en la transcripción exacta de la matrícula. Los errores más frecuentes incluyeron confusiones entre el dígito 8 y el 5, entre las letras D y R, entre las letras A y T, y entre las letras G y J. En ningún caso se produjeron falsos positivos en la consulta a la base de datos, dado que el sistema utiliza la matrícula reconocida como clave primaria y simplemente retorna un registro vacío cuando el texto no existe en la base de datos, lo que garantiza la integridad de las consultas.
 
 La Figura~\ref{fig:pipeline_success_examples} muestra tres ejemplos representativos de éxito del pipeline. En el primer caso, correspondiente a una imagen diurna con la placa en primer plano, el detector alcanzó una confianza del 76\% y el reconocedor identificó correctamente la matrícula completa. En el segundo caso, una imagen nocturna con iluminación artificial, la confianza del detector fue del 76\% y el reconocimiento también fue exacto. En el tercer caso, una placa parcialmente sobre iluminada por las luces del vehículo, el detector logró una confianza del 77\% identificando correctamente los caracteres. En todos estos casos, la consulta a la base de datos retornó la información vehicular asociada, completando exitosamente el pipeline.
 
@@ -231,7 +231,7 @@ La Figura~\ref{fig:pipeline_success_examples} muestra tres ejemplos representati
 \label{fig:pipeline_success_examples}
 \end{figure}
 
-Por otro lado, la Figura~\ref{fig:pipeline_failure_examples} ilustra los casos de fallo más representativos. En el primer ejemplo, una placa con rotación extrema superior a 70 grados no fue detectada por el modelo, resultando en un fallo en la primera etapa del pipeline. En el segundo caso, el detector localizó correctamente la placa, pero la perspectiva de captura provocó que el reconocedor confundiera la letra U con el guion separador, con una confianza de solo el 63\%, lo que derivó en un reconocimiento erróneo al no superar el umbral de confianza. En el tercer ejemplo, una placa capturada desde un ángulo extremo redujo drásticamente el contraste de la matrícula y su legibilidad, impidiendo que el reconocedor identificara correctamente los caracteres. Estos casos representan las condiciones más adversas dentro del conjunto de evaluación y evidencian las principales áreas de mejora para futuras iteraciones del sistema.
+Por otro lado, la Figura~\ref{fig:pipeline_failure_examples} ilustra los casos de fallo más representativos. En el primer ejemplo, una placa con rotación extrema superior a 70 grados no fue detectada por el modelo, resultando en un fallo en la primera etapa del pipeline. En el segundo caso, el detector localizó correctamente la placa, pero la perspectiva de captura provocó que el reconocedor confundiera la letra U con el guion separador, con una confianza de solo el 63\%, lo que derivó en un reconocimiento erróneo al no superar el umbral de confianza. En el tercer ejemplo, una placa capturada desde un ángulo extremo redujo drásticamente el contraste de la matrícula y su legibilidad, impidiendo que el reconocedor identificara correctamente los caracteres. Estos casos representan las condiciones más complejas dentro del conjunto de evaluación y evidencian las principales áreas de mejora para futuras iteraciones del sistema.
 
 \begin{figure}[htb]
 \centering
