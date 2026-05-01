@@ -31,36 +31,29 @@
    pdfpagemode=UseOutlines
 }
 
-\usepackage[immediate]{silence}
-\WarningFilter{latex}{You have requested package}
-\WarningFilter{latex}{Font shape `T1/Montserrat-TOsF/sbx/n' undefined}
-\WarningFilter{latex}{Font shape `T1/Montserrat-TLF/sbx/n' undefined}
-\usepackage[tocgraduated]{assets/tocstyle}
+\usepackage[tocgraduated]{tocstyle}
 \usetocstyle{standard}
 \RequirePackage[sort&compress,numbers]{natbib}
 \bibliographystyle{ieeetr}
-\WarningFilter[temp]{latex}{Command}
-    \usepackage{sectsty}
-\DeactivateWarningFilters[temp]
 \usepackage[nottoc]{tocbibind}
 
 % Figuras & tablas
 \usepackage{float}
 \usepackage[small,bf]{caption}
-\usepackage{tabularx}
 \usepackage{multirow}
 \usepackage{placeins}
 \usepackage{makecell}
 \usepackage[figuresleft]{rotating}
 
 % Parametros visuales
+\usepackage{sectsty}
 \usepackage[margin=0.75in]{geometry}
 \definecolor{MASA-Blue}{RGB}{0,39,76}
 \renewcommand\thesection{\Roman{section}}
 \renewcommand{\bibsection}{\section{References}}
 \newcommand{\boldheader}[1]{\vspace{5mm}\textbf{#1}\textbf{:}\newline}
 \sectionfont{\fontsize{19}{20}\color{MASA-Blue}\fontseries{b}\fontfamily{Montserrat-TLF}\selectfont}
-\subsectionfont{\fontsize{16}{18}\color{MASA-Blue}\fontfamily{Montserrat-TLF}\selectfont}
+\subsectionfont{\fontsize{17.28}{18}\color{MASA-Blue}\fontfamily{Montserrat-TLF}\selectfont}
 \subsubsectionfont{\fontseries{sb}\fontshape{n}\color{MASA-Blue}\fontfamily{Montserrat-TLF}\selectfont}
 \titlespacing{\subsection}{0pt}{*2}{0pt}
 \setlength{\parindent}{0in}
@@ -73,9 +66,9 @@
     \thispagestyle{empty}
     \setlength{\parskip}{0in}
     % (For full style of letterhead footer, use Footer1)
-    \LLCornerWallPaper{1}{assets/Footer2.pdf}
+    \LLCornerWallPaper{1}{figures/Footer2.pdf}
     \begin{flushleft}
-        \includegraphics[width=7.5cm]{assets/Worm_vector.pdf}
+        \includegraphics[width=7.5cm]{figures/Worm_vector.pdf}
     \end{flushleft}
     \begin{flushright}
         \begin{tabularx}{0.5\textwidth}{l @{}}#1\end{tabularx}
@@ -95,18 +88,17 @@
 }
 
 % ------------------------------------------
-% Title Page
+% Titulo
 \newcommand\makeTitlePage[1]{
     \newpage
     \ClearWallPaper
     \thispagestyle{empty}
     \setlength{\parskip}{0in}
-    % (For TSM logo footer, use Footer3)
-    \LLCornerWallPaper{1}{assets/Footer3.pdf}
+    \LLCornerWallPaper{1}{figures/Footer3.pdf}
     \vspace*{\fill}
     \begin{adjustwidth}{1.5cm}{1.5cm} 
     \begin{center}
-        \includegraphics[width=7cm]{assets/Worm_vector.pdf}\\
+        \includegraphics[width=7cm]{figures/Worm_vector.pdf}\\
         \vspace{20mm}
         \fontsize{28}{30}\fontseries{b}\fontshape{n}\color{MASA-Blue}\fontfamily{Montserrat-TLF}\selectfont{\mytitle}\\
         \vspace{15mm}
@@ -123,18 +115,17 @@
 }
 
 % ------------------------------------------
-% Cover Page
+% Cover
 \newcommand\makeCoverPage{
     \newpage
     \ClearWallPaper
     \thispagestyle{empty}
     \setlength{\parskip}{0in}
-    % (For TSM logo footer, use Footer3)
-    \LLCornerWallPaper{1}{assets/Footer3.pdf}
+    \LLCornerWallPaper{1}{figures/Footer3.pdf}
     \vspace*{\fill}
     \begin{adjustwidth}{1.5cm}{1.5cm} 
     \begin{center}
-        \includegraphics[width=14cm]{assets/Worm_vector.pdf}\\
+        \includegraphics[width=14cm]{figures/Worm_vector.pdf}\\
         \vspace{10mm}
         \fontsize{33}{35}\fontseries{b}\fontshape{n}\color{MASA-Blue}\fontfamily{Montserrat-TLF}\selectfont{\mytitle}
         \vspace{45mm}
@@ -164,33 +155,11 @@
 \newcommand\AbstractEmpty[1]{
     \newpage
     \topskip0pt
-    %\addcontentsline{toc}{section}{Abstract}
     \vspace*{\fill}
     \begin{adjustwidth}{1.5cm}{1.5cm} 
-    %\begin{center}
-    %\textbf{\Large\color{MASA-Blue}\fontfamily{Montserrat-TLF}\selectfont Abstract}\\
-    %\vspace{5mm}
-    %\end{center}
     #1
     \end{adjustwidth}
     \vspace*{\fill}
-}
-
-% ------------------------------------------
-% Format for matlab code listing
-\usepackage{listings}
-\definecolor{commentgreen}{RGB}{14,120,0}
-\lstset{
-    numbers=left, 
-    basicstyle=\scriptsize, 
-    commentstyle=\color{commentgreen},
-    keywordstyle=\bf\color{blue},
-    language=matlab, 
-    frame=leftline,
-    rulesepcolor=\color{black},
-    flexiblecolumns=true,
-    extendedchars=false,
-    keepspaces=true
 }
 
 % Preambulo
@@ -198,34 +167,33 @@
 \newcommand{\myauthors}{Gustavo Adolfo Murillo Gutierrez}
 \newcommand{\mydate}{8 de Mayo de 2026}
 
-%region Portada
+%region Inicio del documento
 \begin{document}
-\makeCoverPage
-%\AbstractEmpty{
-    %El reconocimiento automático de matrículas vehiculares (LPR) se ha convertido en una tecnología clave dentro del campo de los sistemas inteligentes aplicados al transporte y la videovigilancia. Actualmente, se han publicado diversos estudios que facilitan el despliegue de este tipo de sistemas haciendo uso de frameworks open-source. Sin embargo, hasta nuestro conocimiento, no se ha presentado un trabajo que porporcione las condiciones suficientes y necesarias para implementar un sistema LPR nativo para las distintas entidades federativas de México. La heterogeneidad en los diseños de cada entidad federativa, la ausencia de bases de datos públicas etiquetadas y las restricciones legales asociadas al uso de imágenes reales de vehículos y sus propietarios convierten a este problema en una oportunidad de exploración. LPR-Sentinel nace como un sistema completo de generación, aumentación, detección y reconocimiento de matrículas mexicanas basado exclusivamente en datos sintéticos y desplegable sobre hardware de bajo poder computacional. El sistema se integra por cinco módulos independientes: (1) MLP-Generator, que produce matrículas sintéticas conforme a la Norma Oficial Mexicana NOM-001-SCT-2-2016, (2) MLP-Augmentator, que aplica 29 transformaciones morfológicas para simular condiciones reales de captura, (3) MLP-Detector, basado en Redes Neuronales Convolucionales (CNN) para localizar la placa en imágenes de escena completa, (4) MLP-Recognizer, basado en una arquitectura Compact Convolutional Transformer (CCT) que transcribe el texto de la matrícula y (5) MLP-Pipeline, que integra todos los componentes anteriores junto con una base de datos SQLite, alcanzando una tasa de éxito promedio del XXXX\% en condiciones diurnas y del XXXX\% en condiciones nocturnas sobre un conjunto de prueba simulado, con una latencia extremo a extremo promedio de XXXXX ms por imagen. Los resultados demuestran que los datos sintéticos, cuando son generados con estricto apego a la normativa y aumentados adecuadamente, pueden complementar a los datos reales en el entrenamiento de sistemas LPR sin incurrir en problemas éticos, legales y de rendimiento. El uso del formato ONNX como interfaz unificada de despliegue permite ejecutar el pipeline completo en dispositivos de bajo poder computacional como la Raspberry Pi 4B, abriendo la posibilidad de aplicaciones distribuidas y sistemas embebidos. El código fuente, los modelos entrenados y las bases de datos sintéticas generadas se encuentran disponibles públicamente, garantizando la reproducibilidad y facilitando la extensión de este trabajo por parte de la comunidad científica.
+    \makeCoverPage
+    %\AbstractEmpty{
+        %El reconocimiento automático de matrículas vehiculares (LPR) se ha convertido en una tecnología clave dentro del campo de los sistemas inteligentes aplicados al transporte y la videovigilancia. Actualmente, se han publicado diversos estudios que facilitan el despliegue de este tipo de sistemas haciendo uso de frameworks open-source. Sin embargo, hasta nuestro conocimiento, no se ha presentado un trabajo que porporcione las condiciones suficientes y necesarias para implementar un sistema LPR nativo para las distintas entidades federativas de México. La heterogeneidad en los diseños de cada entidad federativa, la ausencia de bases de datos públicas etiquetadas y las restricciones legales asociadas al uso de imágenes reales de vehículos y sus propietarios convierten a este problema en una oportunidad de exploración. LPR-Sentinel nace como un sistema completo de generación, aumentación, detección y reconocimiento de matrículas mexicanas basado exclusivamente en datos sintéticos y desplegable sobre hardware de bajo poder computacional. El sistema se integra por cinco módulos independientes: (1) MLP-Generator, que produce matrículas sintéticas conforme a la Norma Oficial Mexicana NOM-001-SCT-2-2016, (2) MLP-Augmentator, que aplica 29 transformaciones morfológicas para simular condiciones reales de captura, (3) MLP-Detector, basado en Redes Neuronales Convolucionales (CNN) para localizar la placa en imágenes de escena completa, (4) MLP-Recognizer, basado en una arquitectura Compact Convolutional Transformer (CCT) que transcribe el texto de la matrícula y (5) MLP-Pipeline, que integra todos los componentes anteriores junto con una base de datos SQLite, alcanzando una tasa de éxito promedio del XXXX\% en condiciones diurnas y del XXXX\% en condiciones nocturnas sobre un conjunto de prueba simulado, con una latencia extremo a extremo promedio de XXXXX ms por imagen. Los resultados demuestran que los datos sintéticos, cuando son generados con estricto apego a la normativa y aumentados adecuadamente, pueden complementar a los datos reales en el entrenamiento de sistemas LPR sin incurrir en problemas éticos, legales y de rendimiento. El uso del formato ONNX como interfaz unificada de despliegue permite ejecutar el pipeline completo en dispositivos de bajo poder computacional como la Raspberry Pi 4B, abriendo la posibilidad de aplicaciones distribuidas y sistemas embebidos. El código fuente, los modelos entrenados y las bases de datos sintéticas generadas se encuentran disponibles públicamente, garantizando la reproducibilidad y facilitando la extensión de este trabajo por parte de la comunidad científica.
 
-    %\textbf{\small\color{MASA-Blue}\fontfamily{Montserrat-TLF}\selectfont Keywords:} Reconocimiento automático de placas mexicanas, LPR, datos sintéticos, YOLOv11s, FastPlateOCR, ONNX, Raspberry Pi 4B, NOM-001-SCT-2-2016.
-%}
-\newpage
-\ClearWallPaper
-\pagenumbering{roman}
-\newpage
-\tableofcontents
-\newpage
-\listoffigures
-\newpage
-%endregion
+        %\textbf{\small\color{MASA-Blue}\fontfamily{Montserrat-TLF}\selectfont Keywords:} Reconocimiento automático de placas mexicanas, LPR, datos sintéticos, YOLOv11s, FastPlateOCR, ONNX, Raspberry Pi 4B, NOM-001-SCT-2-2016.
+    %}
+    \newpage
+    \ClearWallPaper
+    \pagenumbering{roman}
+    \newpage
+    \tableofcontents
+    \newpage
+    \listoffigures
+    \newpage
+    %endregion
 
-%region Contenido
-\input{assets/section0}
-\input{assets/section1}
-\input{assets/section2}
-\input{assets/section3}
-%\input{assets/section4}
-\input{assets/section5}
-%endregion
+    %region Contenido
+    \input{assets/section0}
+    \input{assets/section1}
+    \input{assets/section2}
+    \input{assets/section3}
+    \input{assets/section4}
+    %endregion
 
-%region Bibliografía
-\bibliography{references}
-%endregion
+    %region Bibliografia
+    \bibliography{references.bib}
+    %endregion
 \end{document}
