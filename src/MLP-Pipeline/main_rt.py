@@ -44,14 +44,18 @@ CSV_METADATA_PATH = "../MLP-Generator/dataset/license_plates_metadata.csv" # CSV
 
 # Constantes del detector
 DETECTOR_IMG_SIZE = 640 # Tamanio de entrada del detector
-DETECTOR_CONF_THRESHOLD = 0.7 # Umbral de confianza para deteccion
+DETECTOR_CONF_THRESHOLD = 0.5 # Umbral de confianza para deteccion
 DETECTOR_NMS_THRESHOLD = 0.45 # Umbral NMS
 DETECTOR_PLATE_CLASS_ID = 0 # ID de clase para placa vehicular
 ROI_MARGIN = 1 # Margen para extraer ROI
 
 # Constantes para procesamiento de video
-VIDEO_SKIP_FRAMES = 2  # Procesar cada N frames para mejorar rendimiento
+VIDEO_SKIP_FRAMES = 1  # Procesar cada N frames para mejorar rendimiento
 DETECTION_COOLDOWN_FRAMES = 30  # Frames de espera antes de reprocesar misma placa
+
+DEBUG_MODE = True  # Activar modo debugging
+SAVE_DEBUG_FRAMES = True  # Guardar frames para depuración
+DEBUG_OUTPUT_DIR = "debug_outputs"
 #endregion
 
 #region Main class
@@ -115,8 +119,163 @@ class MexicanLicencePlateDetector:
         
         # Configurar signal handler para cerrar gracefulmente
         signal.signal(signal.SIGINT, self._signal_handler)
+
+        self.debug_mode = DEBUG_MODE
+        self.save_debug_frames = SAVE_DEBUG_FRAMES
+        self.debug_dir = Path(DEBUG_OUTPUT_DIR)
+        if self.debug_mode:
+            self.debug_dir.mkdir(parents=True, exist_ok=True)
+            print(f"Modo debugging activado - Guardando frames en: {self.debug_dir}")
         
     # Metodos de inicializacion
+    # NUEVO MÉTODO: Analizar calidad del frame
+    def analyze_frame_quality(self, frame: np.ndarray, frame_num: int) -> Dict:
+        """Analiza la calidad del frame para diagnóstico"""
+        h, w = frame.shape[:2]
+        
+        # Calcular estadísticas
+        mean_brightness = np.mean(frame)
+        std_brightness = np.std(frame)
+        
+        # Detectar si el frame es muy oscuro o muy brillante
+        is_dark = mean_brightness < 80
+        is_bright = mean_brightness > 200
+        
+        # Detectar si el frame tiene bajo contraste
+        is_low_contrast = std_brightness < 30
+        
+        return {
+            'resolution': f"{w}x{h}",
+            'mean_brightness': mean_brightness,
+            'std_brightness': std_brightness,
+            'is_dark': is_dark,
+            'is_bright': is_bright,
+            'is_low_contrast': is_low_contrast
+        }
+    
+    def _prepare_detector_input_enhanced(self, img: np.ndarray) -> Tuple[np.ndarray, int, int, float]:
+        """
+        Versión mejorada que mantiene aspect ratio y registra transformaciones
+        """
+        img_height, img_width = img.shape[:2]
+        
+        # Calcular escala manteniendo aspect ratio
+        scale = min(DETECTOR_IMG_SIZE / img_width, DETECTOR_IMG_SIZE / img_height)
+        new_width = int(img_width * scale)
+        new_height = int(img_height * scale)
+        
+        # Redimensionar manteniendo aspect ratio
+        img_resized = cv2.resize(img, (new_width, new_height), interpolation=cv2.INTER_LINEAR)
+        
+        # Crear canvas de 640x640 con fondo negro
+        canvas = np.zeros((DETECTOR_IMG_SIZE, DETECTOR_IMG_SIZE, 3), dtype=np.uint8)
+        
+        # Calcular offsets para centrar
+        x_offset = (DETECTOR_IMG_SIZE - new_width) // 2
+        y_offset = (DETECTOR_IMG_SIZE - new_height) // 2
+        
+        # Pegar imagen redimensionada en el canvas
+        canvas[y_offset:y_offset + new_height, x_offset:x_offset + new_width] = img_resized
+        
+        # Normalizar y preparar para ONNX
+        canvas = canvas.astype(np.float32) / 255.0
+        canvas = np.transpose(canvas, (2, 0, 1))
+        input_data = np.expand_dims(canvas, axis=0)
+        
+        # Guardar parámetros para post-procesamiento
+        self.last_scale = scale
+        self.last_x_offset = x_offset
+        self.last_y_offset = y_offset
+        
+        return input_data, img_width, img_height, scale
+    
+    def _postprocess_detections_enhanced(
+        self,
+        outputs: List[np.ndarray],
+        img_width: int,
+        img_height: int,
+        scale: float
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """
+        Postprocesa las salidas considerando el aspect ratio y offsets
+        """
+        output = outputs[0][0]  # [84, 8400]
+        output = output.T  # [8400, 84]
+        
+        boxes = output[:, :4]
+        class_probs = output[:, 4:]
+        
+        class_ids = np.argmax(class_probs, axis=1)
+        confidences = np.max(class_probs, axis=1)
+        
+        # Debug: mostrar estadísticas de detección
+        if self.debug_mode and len(confidences) > 0:
+            print(f"    Total detecciones antes de filtro: {len(confidences)}")
+            print(f"    Confianza máxima: {np.max(confidences):.4f}")
+            print(f"    Confianza promedio: {np.mean(confidences):.4f}")
+        
+        # Filtrar por umbral de confianza (más bajo para video)
+        dynamic_threshold = DETECTOR_CONF_THRESHOLD
+        if img_width < 640 or img_height < 640:
+            # Para videos de baja resolución, usar umbral más bajo
+            dynamic_threshold = 0.5
+            if self.debug_mode:
+                print(f"     Usando umbral dinámico: {dynamic_threshold:.2f} (video baja resolución)")
+        
+        mask = confidences > dynamic_threshold
+        boxes = boxes[mask]
+        class_ids = class_ids[mask]
+        confidences = confidences[mask]
+        
+        if self.debug_mode and len(confidences) > 0:
+            print(f"     Detecciones después de filtro: {len(confidences)}")
+        
+        if len(boxes) == 0:
+            return np.array([]), np.array([]), np.array([])
+        
+        # Convertir de [x_center, y_center, width, height] a [x1, y1, x2, y2] en canvas
+        x_center = boxes[:, 0]
+        y_center = boxes[:, 1]
+        width = boxes[:, 2]
+        height = boxes[:, 3]
+        
+        # Coordenadas en el canvas (640x640)
+        x1_canvas = x_center - width / 2
+        y1_canvas = y_center - height / 2
+        x2_canvas = x_center + width / 2
+        y2_canvas = y_center + height / 2
+        
+        # Remover offsets y escalar a dimensiones originales
+        x1 = (x1_canvas - self.last_x_offset) / scale
+        y1 = (y1_canvas - self.last_y_offset) / scale
+        x2 = (x2_canvas - self.last_x_offset) / scale
+        y2 = (y2_canvas - self.last_y_offset) / scale
+        
+        # Clip a límites de la imagen
+        x1 = np.clip(x1, 0, img_width)
+        y1 = np.clip(y1, 0, img_height)
+        x2 = np.clip(x2, 0, img_width)
+        y2 = np.clip(y2, 0, img_height)
+        
+        boxes_xyxy = np.stack([x1, y1, x2, y2], axis=1).astype(np.int32)
+        
+        # Aplicar NMS solo si hay detecciones
+        if len(boxes_xyxy) > 0:
+            indices = cv2.dnn.NMSBoxes(
+                boxes_xyxy.tolist(),
+                confidences.tolist(),
+                dynamic_threshold,
+                DETECTOR_NMS_THRESHOLD
+            )
+            
+            if len(indices) > 0:
+                indices = indices.flatten()
+                boxes_xyxy = boxes_xyxy[indices]
+                confidences = confidences[indices]
+                class_ids = class_ids[indices]
+        
+        return boxes_xyxy, confidences, class_ids
+    
     def _load_detector_model(self) -> None:
         """Carga el modelo YOLO ONNX para deteccion de placas."""
         try:
@@ -619,50 +778,76 @@ class MexicanLicencePlateDetector:
     def process_frame(self, frame: np.ndarray, save_roi: bool = False, source: str = "video") -> Tuple[np.ndarray, Optional[Dict]]:
         """
         Procesa un solo frame de video para deteccion de placas.
-        
-        Parametros
-        ----------
-        frame : np.ndarray
-            Frame de video a procesar.
-        save_roi : bool
-            Si es True, guarda la ROI detectada.
-        source : str
-            Fuente del video ("video" o "camera").
-        
-        Retorna
-        -------
-        tuple
-            (frame_annotated, detection_info)
-            frame_annotated: Frame con anotaciones dibujadas
-            detection_info: Diccionario con informacion de la deteccion o None
         """
         self.frame_count += 1
         
+        # DEBUG: Mostrar cada 30 frames
+        if self.debug_mode and self.frame_count % 30 == 0:
+            print(f"\n [DEBUG] Procesando frame {self.frame_count}")
+            print(f"   Shape del frame: {frame.shape}")
+            print(f"   Skip frames config: {VIDEO_SKIP_FRAMES}")
+        
         # Skip frames para mejorar rendimiento
         if self.frame_count % VIDEO_SKIP_FRAMES != 0:
+            if self.debug_mode and self.frame_count % 30 == 0:
+                print(f"    Frame saltado (skip={VIDEO_SKIP_FRAMES})")
             return frame, None
+        
+        if self.debug_mode and self.frame_count % 30 == 0:
+            print(f"    Procesando frame (sin skip)")
         
         detection_info = None
         
         try:
+            # DEBUG: Tiempo de inicio
+            start_time = time.time()
+            
             # Deteccion de placas
             input_data, img_width, img_height = self._prepare_detector_input(frame)
+            
+            if self.debug_mode and self.frame_count % 30 == 0:
+                print(f"   Input shape: {input_data.shape}")
+            
             outputs = self.detector_session.run(None, {self.detector_input_name: input_data})
+            
+            if self.debug_mode and self.frame_count % 30 == 0:
+                print(f"   Outputs obtenidos, shape: {outputs[0].shape}")
+            
             boxes, confidences, class_ids = self._postprocess_detections(
                 outputs, img_width, img_height
             )
             
+            if self.debug_mode and self.frame_count % 30 == 0:
+                print(f"   Detecciones encontradas: {len(boxes)}")
+                if len(boxes) > 0:
+                    print(f"   Confianzas: {confidences}")
+                    print(f"   Class IDs: {class_ids}")
+            
             # Buscar deteccion de placa (clase 0)
+            plates_found = 0
             for i, (box, conf, class_id) in enumerate(zip(boxes, confidences, class_ids)):
                 if class_id == DETECTOR_PLATE_CLASS_ID:
+                    plates_found += 1
                     x1, y1, x2, y2 = box
                     
-                    # Dibujar rectangulo de deteccion
+                    if self.debug_mode:
+                        print(f"\n    PLACA ENCONTRADA en frame {self.frame_count}:")
+                        print(f"      Bounding box: ({x1},{y1}) -> ({x2},{y2})")
+                        print(f"      Tamaño: {x2-x1}x{y2-y1} px")
+                        print(f"      Confianza detección: {conf:.4f}")
+                    
+                    # Validar tamaño mínimo
+                    if (x2 - x1) < 30 or (y2 - y1) < 15:
+                        if self.debug_mode:
+                            print(f"        Descartada: muy pequeña (mínimo 30x15)")
+                        continue
+                    
+                    # Dibujar rectangulo
                     cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
                     cv2.putText(frame, f"Placa: {conf:.2f}", (x1, y1 - 10),
-                               cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
                     
-                    # Extraer ROI
+                    # Extraer ROI con margen
                     y1_margin = max(0, y1 - ROI_MARGIN)
                     y2_margin = min(frame.shape[0], y2 + ROI_MARGIN)
                     x1_margin = max(0, x1 - ROI_MARGIN)
@@ -670,7 +855,10 @@ class MexicanLicencePlateDetector:
                     
                     plate_roi = frame[y1_margin:y2_margin, x1_margin:x2_margin]
                     
-                    # Cooldown: no procesar la misma placa repetidamente
+                    if self.debug_mode:
+                        print(f"      ROI extraída: {plate_roi.shape}")
+                    
+                    # Cooldown
                     current_plate_key = f"{x1},{y1},{x2},{y2}"
                     frames_since_last = self.frame_count - self.last_detection_frame
                     
@@ -685,30 +873,46 @@ class MexicanLicencePlateDetector:
                         plate_text, ocr_confidences = self._decode_ocr_prediction(predictions)
                         mean_confidence = np.mean(ocr_confidences) if ocr_confidences else 0
                         
-                        # Validar que la placa tenga longitud razonable
-                        if len(plate_text) >= 5 and mean_confidence > 0.5:
-                            # Consultar base de datos
+                        if self.debug_mode:
+                            print(f"      OCR resultado: '{plate_text}' (conf: {mean_confidence:.4f})")
+                        
+                        # --- IMPORTANTE: SIEMPRE dibujar el texto aunque sea rechazado ---
+                        # Dibujar siempre el texto detectado
+                        info_text = f"OCR: {plate_text} ({mean_confidence:.2f})"
+                        cv2.putText(frame, info_text, (x1, y2 + 25),
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 255), 2)
+                        
+                        # Consultar base de datos (si la placa tiene longitud razonable)
+                        database_record = None
+                        if len(plate_text) >= 5:
                             database_record = self._query_database(plate_text)
+                        
+                        # Mostrar información de la base de datos SIEMPRE (si existe)
+                        y_offset = y2 + 50
+                        if database_record:
+                            # Mostrar datos de la BD
+                            for key, value in database_record.items():
+                                if key != 'Matricula' and value and str(value).strip():
+                                    text = f"{key}: {value}"
+                                    if len(text) > 40:
+                                        text = text[:37] + "..."
+                                    cv2.putText(frame, text, (x1, y_offset),
+                                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (75, 200, 200), 2)
+                                    y_offset += 20
+                                    if y_offset > frame.shape[0] - 10:
+                                        break
+                        else:
+                            # Mostrar mensaje de "Sin registro" solo si la placa parece válida
+                            if len(plate_text) >= 5:
+                                cv2.putText(frame, "Sin registro en BD", (x1, y_offset),
+                                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (75, 200, 200), 2)
+                        
+                        # Guardar en log y BD solo si la confianza es aceptable
+                        if len(plate_text) >= 5 and mean_confidence > 0.3:
+                            #database_record = self._query_database(plate_text)
                             
-                            # Guardar deteccion en log
                             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                             self._save_detection_log(plate_text, mean_confidence, timestamp, source)
-                            
-                            # Guardar ROI si se solicita
-                            if save_roi:
-                                roi_filename = f"roi_{timestamp.replace(' ', '_').replace(':', '-')}.jpg"
-                                roi_path = os.path.join(self.output_dir, roi_filename)
-                                cv2.imwrite(roi_path, plate_roi)
-                            
-                            # Mostrar informacion en frame
-                            info_text = f"Placa: {plate_text} ({mean_confidence:.2f})"
-                            cv2.putText(frame, info_text, (x1, y2 + 25),
-                                       cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
-                            
-                            if database_record:
-                                propietario = database_record.get('Propietario', 'Desconocido')
-                                cv2.putText(frame, f"Prop: {propietario}", (x1, y2 + 50),
-                                           cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 0), 1)
                             
                             detection_info = {
                                 'plate_text': plate_text,
@@ -719,51 +923,115 @@ class MexicanLicencePlateDetector:
                                 'frame_number': self.frame_count
                             }
                             
-                            print(f"[Frame {self.frame_count}] Placa detectada: {plate_text} (conf: {mean_confidence:.2f})")
+                            print(f"\n[Frame {self.frame_count}] PLACA DETECTADA: {plate_text} (conf: {mean_confidence:.2f})")
                             
-                            # Actualizar estado de cooldown
+                            if database_record:
+                                print(f"  Datos encontrados en BD:")
+                                for key, value in database_record.items():
+                                    if value:
+                                        print(f"    {key}: {value}")
+                            else:
+                                print(f"  Sin registro en BD")
+
+                            # Actualizar estado
                             self.last_detected_plate = current_plate_key
                             self.last_detection_frame = self.frame_count
+                        else:
+                            # Aunque sea rechazado, mostramos el texto en amarillo
+                            if len(plate_text) >= 5:
+                                print(f"OCR mostrado en video (confianza baja): {plate_text}")
+                    else:
+                        # Si está en cooldown, igual mostrar el texto de la última detección
+                        if self.last_detected_plate:
+                            cv2.putText(frame, f"Last: {self.last_detected_plate[:15]}", (x1, y2 + 25),
+                                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (100, 100, 100), 1)
+            
+            if self.debug_mode and self.frame_count % 30 == 0:
+                processing_time = (time.time() - start_time) * 1000
+                print(f"     Tiempo procesamiento: {processing_time:.1f} ms")
+                print(f"    Total placas encontradas en frame: {plates_found}")
+                
+                if plates_found == 0 and self.frame_count % 60 == 0:
+                    # Guardar frame para análisis
+                    debug_path = self.debug_dir / f"no_detection_frame_{self.frame_count:06d}.jpg"
+                    cv2.imwrite(str(debug_path), frame)
+                    print(f"    Frame sin detecciones guardado: {debug_path}")
             
             return frame, detection_info
             
         except Exception as e:
-            print(f"Error procesando frame: {e}")
+            print(f" Error procesando frame {self.frame_count}: {e}")
+            import traceback
+            traceback.print_exc()
             return frame, None
     
-    def process_video_file(
-        self,
-        video_path: str,
-        output_video: Optional[str] = None,
-        save_roi: bool = False,
-        display: bool = False,
-        start_frame: int = 0,
-        end_frame: Optional[int] = None
-    ) -> Dict:
+    # Nuevo método para probar un solo frame del video
+    def test_single_frame(self, video_path: str, frame_number: int = 0):
+        """
+        Prueba un frame específico del video para diagnóstico
+        """
+        cap = cv2.VideoCapture(video_path)
+        cap.set(cv2.CAP_PROP_POS_FRAMES, frame_number)
+        ret, frame = cap.read()
+        cap.release()
+        
+        if not ret:
+            print(f"Error: No se pudo leer el frame {frame_number}")
+            return
+        
+        print(f"\n TESTEANDO FRAME {frame_number} DEL VIDEO")
+        print("="*50)
+        
+        # Analizar calidad
+        quality = self.analyze_frame_quality(frame, frame_number)
+        print(f"Calidad del frame:")
+        print(f"  - Resolución: {quality['resolution']}")
+        print(f"  - Brillo medio: {quality['mean_brightness']:.1f}")
+        print(f"  - Contraste: {quality['std_brightness']:.1f}")
+        
+        # Procesar frame
+        processed_frame, detection = self.process_frame(frame, save_roi=True, source="test")
+        
+        # Guardar resultado
+        test_output = self.debug_dir / f"test_frame_{frame_number}.jpg"
+        cv2.imwrite(str(test_output), processed_frame)
+        print(f"\n Frame procesado guardado en: {test_output}")
+        
+        if detection:
+            print(f"\n ¡DETECCIÓN EXITOSA!")
+            print(f"  Placa: {detection['plate_text']}")
+            print(f"  Confianza: {detection['confidence']:.4f}")
+        else:
+            print(f"\n No se detectaron placas en este frame")
+            
+            # Guardar frame sin procesar para análisis manual
+            raw_output = self.debug_dir / f"test_frame_{frame_number}_raw.jpg"
+            cv2.imwrite(str(raw_output), frame)
+            print(f"  Frame original guardado en: {raw_output}")
+        
+        return detection
+    
+    def process_frame_with_number(self, frame: np.ndarray, frame_number: int, save_roi: bool = False, source: str = "video") -> Tuple[np.ndarray, Optional[Dict]]:
+        """
+        Versión de process_frame que acepta número de frame explícito
+        """
+        # Guardar frame_number temporalmente
+        original_frame_count = self.frame_count
+        self.frame_count = frame_number
+        
+        # Procesar frame
+        result = self.process_frame(frame, save_roi, source)
+        
+        # Restaurar frame_count
+        self.frame_count = original_frame_count
+        
+        return result
+    
+    def process_video_file(self, video_path: str, output_video: Optional[str] = None, save_roi: bool = False, display: bool = False, start_frame: int = 0, end_frame: Optional[int] = None) -> Dict:
         """
         Procesa un archivo de video y guarda el resultado.
-        
-        Parametros
-        ----------
-        video_path : str
-            Ruta al archivo de video de entrada.
-        output_video : str, optional
-            Ruta para guardar el video procesado.
-        save_roi : bool
-            Si es True, guarda las ROIs detectadas.
-        display : bool
-            Si es True, muestra la ventana de video durante el procesamiento.
-        start_frame : int
-            Frame inicial para procesar.
-        end_frame : int, optional
-            Frame final para procesar.
-        
-        Retorna
-        -------
-        dict
-            Estadisticas del procesamiento.
         """
-        print(f"\nProcesando archivo de video: {video_path}")
+        print(f"\n Procesando archivo de video: {video_path}")
         
         # Verificar que el archivo existe
         if not Path(video_path).exists():
@@ -782,25 +1050,26 @@ class MexicanLicencePlateDetector:
         
         print(f"Video: {width}x{height}, FPS: {fps:.2f}, Total frames: {total_frames}")
         
-        # Configurar rango de frames a procesar
+        # Configurar rango de frames
         start_frame = max(0, start_frame)
         if end_frame is None or end_frame > total_frames:
             end_frame = total_frames
         
-        print(f"Procesando frames: {start_frame} a {end_frame}")
+        print(f"Procesando frames: {start_frame} a {end_frame} (total: {end_frame - start_frame} frames)")
+        print(f"Configuración: Skip frames = {VIDEO_SKIP_FRAMES}, Cooldown = {DETECTION_COOLDOWN_FRAMES}")
         
-        # Saltar a frame inicial si es necesario
+        # Saltar a frame inicial
         if start_frame > 0:
             cap.set(cv2.CAP_PROP_POS_FRAMES, start_frame)
         
-        # Inicializar video writer si se solicita
+        # Inicializar video writer
         if output_video:
             fourcc = cv2.VideoWriter_fourcc(*'mp4v')
             self.video_writer = cv2.VideoWriter(output_video, fourcc, fps, (width, height))
             print(f"Guardando video procesado en: {output_video}")
         
         # Variables para estadisticas
-        self.frame_count = start_frame
+        frame_counter = start_frame
         detection_count = 0
         detections_list = []
         processing_times = []
@@ -808,72 +1077,81 @@ class MexicanLicencePlateDetector:
         # Bucle de procesamiento
         self.running = True
         frames_processed = 0
+        frames_skipped = 0
         
-        print("\nIniciando procesamiento... (presione Ctrl+C para detener)")
+        print("\n Iniciando procesamiento... (presione Ctrl+C para detener)\n")
         
-        while self.running and self.frame_count < end_frame:
+        if display:
+            print("  Display deshabilitado en Windows (problema de OpenCV)")
+            display = False
+            
+        while self.running: #and self.frame_count < end_frame:
             ret, frame = cap.read()
             if not ret:
                 break
             
+            if frame_counter >= end_frame:
+                print(f"\n Límite de frames alcanzado ({end_frame})")
+                break
+            # Contar frames
+            frames_processed += 1
+            
             # Procesar frame
+            current_frame_num = frame_counter
             start_time = time.time()
-            processed_frame, detection = self.process_frame(frame, save_roi, source="video")
-            processing_time = time.time() - start_time
+            processed_frame, detection = self.process_frame_with_number(frame, current_frame_num, save_roi, source="video")
+            processing_time = (time.time() - start_time) * 1000  # ms
             processing_times.append(processing_time)
             
+            # Verificar si el frame fue realmente procesado o skipeado
             if detection:
                 detection_count += 1
                 detections_list.append(detection)
-                print(f"  -> Frame {self.frame_count}: {detection['plate_text']} ({detection['confidence']:.2f})")
+                print(f"\n DETECCIÓN #{detection_count}:")
+                print(f"   Frame: {self.frame_count}")
+                print(f"   Placa: {detection['plate_text']}")
+                print(f"   Confianza: {detection['confidence']:.3f}")
             
             # Agregar informacion al frame
-            cv2.putText(processed_frame, f"Frame: {self.frame_count}/{end_frame}", (10, 30),
-                       cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
-            cv2.putText(processed_frame, f"Detecciones: {detection_count}", (10, 60),
-                       cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+            cv2.putText(processed_frame, f"Frame: {current_frame_num}/{end_frame}", (10, 30),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+            #cv2.putText(processed_frame, f"Detecciones: {detection_count}", (10, 60),
+            #        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+            cv2.putText(processed_frame, f"FPS: {1000/processing_time:.1f}", (10, 60),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
             
-            # Guardar frame si se esta grabando
+            # Guardar frame
             if self.video_writer:
                 self.video_writer.write(processed_frame)
             
-            # Mostrar frame si se solicita
-            if display:
-                # Redimensionar para mostrar si es muy grande
-                display_frame = processed_frame
-                if width > 1280:
-                    display_frame = imutils.resize(processed_frame, width=1280)
+            # Mostrar progreso
+            if frames_processed % 30 == 0:
+                progress = (frame_counter - start_frame) / (end_frame - start_frame) * 100
                 
-                cv2.imshow('Procesando Video', display_frame)
-                key = cv2.waitKey(1) & 0xFF
-                if key == ord('q'):
-                    print("\nDeteniendo procesamiento por solicitud del usuario...")
-                    break
+                avg_time = np.mean(processing_times[-30:]) if processing_times else 0
+                
+                eta = (avg_time * (end_frame - frame_counter)) / 1000 if avg_time > 0 else 0
+
+                print(f"Progreso: {progress:.1f}% | Frame: {frame_counter}/{end_frame} | "
+                    f"FPS: {1000/avg_time:.1f} | ETA: {eta:.1f}s | Detecciones: {detection_count}")
+                
+            frame_counter += 1
             
-            self.frame_count += 1
-            frames_processed += 1
-            
-            # Mostrar progreso cada 100 frames
-            if frames_processed % 100 == 0:
-                progress = (self.frame_count - start_frame) / (end_frame - start_frame) * 100
-                print(f"Progreso: {progress:.1f}% - Frames procesados: {frames_processed}")
-        
         # Limpiar recursos
         cap.release()
         if self.video_writer:
             self.video_writer.release()
-        if display:
-            cv2.destroyAllWindows()
         
         # Calcular estadisticas
         avg_processing_time = np.mean(processing_times) if processing_times else 0
-        processing_fps = 1.0 / avg_processing_time if avg_processing_time > 0 else 0
+        processing_fps = 1000.0 / avg_processing_time if avg_processing_time > 0 else 0
         
         stats = {
             'total_frames_processed': frames_processed,
+            'frames_skipped': frames_skipped,
             'detection_count': detection_count,
             'detections': detections_list,
-            'avg_processing_time_ms': avg_processing_time * 1000,
+            'avg_processing_time_ms': avg_processing_time,
             'processing_fps': processing_fps,
             'input_fps': fps,
             'output_video': output_video
@@ -883,8 +1161,9 @@ class MexicanLicencePlateDetector:
         print("PROCESAMIENTO COMPLETADO")
         print("="*50)
         print(f"Frames procesados: {frames_processed}")
+        print(f"Frames skipeados: {frames_skipped}")
         print(f"Detecciones: {detection_count}")
-        print(f"Tiempo promedio por frame: {avg_processing_time*1000:.2f} ms")
+        print(f"Tiempo promedio por frame: {avg_processing_time:.2f} ms")
         print(f"FPS de procesamiento: {processing_fps:.2f}")
         print(f"FPS original del video: {fps:.2f}")
         
@@ -892,6 +1171,8 @@ class MexicanLicencePlateDetector:
             print(f"Video guardado en: {output_video}")
         
         return stats
+    
+    
     
     def start_real_time(
         self,
@@ -971,9 +1252,9 @@ class MexicanLicencePlateDetector:
             
             # Mostrar FPS en frame
             cv2.putText(processed_frame, f"FPS: {fps_display}", (10, 30),
-                       cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 2)
-            cv2.putText(processed_frame, f"Detecciones: {detection_count}", (10, 60),
-                       cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 255), 2)
+                       cv2.FONT_HERSHEY_SIMPLEX, 10, (0, 255, 255), 2)
+            cv2.putText(processed_frame, f"Detecciones: {detection_count}", (10, 120),
+                       cv2.FONT_HERSHEY_SIMPLEX, 10, (0, 255, 255), 2)
             
             # Guardar frame si se esta grabando
             if self.video_writer:
@@ -1088,6 +1369,12 @@ Ejemplos de uso:
         action='store_true',
         help='Mostrar ventana de video durante el procesamiento'
     )
+
+    parser.add_argument(
+        '--test-frame',
+        type=int,
+        help='Probar un frame específico del video (para diagnóstico)'
+    )
     
     # Argumentos generales
     parser.add_argument(
@@ -1135,6 +1422,11 @@ Ejemplos de uso:
     if modes > 1:
         print("Error: Solo puede especificar un modo de operacion (--image, --video o --camera)")
         sys.exit(1)
+    
+    if args.video and args.test_frame is not None:
+        pipeline = MexicanLicencePlateDetector(...)
+        pipeline.test_single_frame(args.video, args.test_frame)
+        return
     
     try:
         # Crear pipeline
@@ -1222,6 +1514,72 @@ Ejemplos de uso:
         import traceback
         traceback.print_exc()
         sys.exit(1)
+
+def diagnose_video_issues(video_path: str):
+    """
+    Script rápido para diagnosticar problemas con videos
+    """
+    print("\n DIAGNÓSTICO DE VIDEO")
+    print("="*50)
+    
+    # 1. Analizar propiedades del video
+    cap = cv2.VideoCapture(video_path)
+    fps = cap.get(cv2.CAP_PROP_FPS)
+    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    
+    print(f"\n Propiedades del video:")
+    print(f"  - Resolución: {width}x{height}")
+    print(f"  - FPS: {fps:.2f}")
+    print(f"  - Total frames: {total_frames}")
+    
+    # 2. Analizar primeros 10 frames
+    print(f"\n Analizando primeros 10 frames...")
+    frame_stats = []
+    
+    for i in range(min(10, total_frames)):
+        ret, frame = cap.read()
+        if not ret:
+            break
+        
+        mean_brightness = np.mean(frame)
+        std_brightness = np.std(frame)
+        
+        frame_stats.append({
+            'frame': i,
+            'brightness': mean_brightness,
+            'contrast': std_brightness
+        })
+        
+        print(f"  Frame {i}: brillo={mean_brightness:.1f}, contraste={std_brightness:.1f}")
+    
+    cap.release()
+    
+    # 3. Recomendaciones
+    print(f"\n RECOMENDACIONES:")
+    
+    avg_brightness = np.mean([s['brightness'] for s in frame_stats])
+    avg_contrast = np.mean([s['contrast'] for s in frame_stats])
+    
+    if avg_brightness < 80:
+        print("    El video es muy oscuro. Considere:")
+        print("     - Mejorar iluminación al grabar")
+        print("     - Aplicar ecualización de histograma")
+    
+    if avg_contrast < 30:
+        print("    El video tiene bajo contraste. Considere:")
+        print("     - Mejorar condiciones de grabación")
+        print("     - Aplicar CLAHE (ecualización adaptativa)")
+    
+    if width < 640 or height < 640:
+        print(f"    La resolución ({width}x{height}) es menor a la esperada por YOLO (640x640)")
+        print("     Esto reducirá la precisión de detección.")
+        print("     Recomendación: Grabar a 720p o superior")
+    
+    print("\n   Para debugging, ejecute:")
+    print(f"     python main.py --video {video_path} --test-frame 0")
+    print(f"     python main.py --video {video_path} --display")
 
 if __name__ == "__main__":
     main()
