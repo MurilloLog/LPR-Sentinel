@@ -1,0 +1,9 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+  </Configurations>
+  <Project Path="MLP_Register/MLP_Register.csproj" Id="8a699e81-534b-4ac2-8b0b-8fec9c04b35d">
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
+</Solution>
