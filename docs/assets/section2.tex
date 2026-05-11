@@ -177,3 +177,72 @@ Una vez localizada la placa, el pipeline procede a la extracción de la ROI apli
 
 La cuarta y última etapa del pipeline consiste en la consulta a la base de datos SQLite utilizando el texto de la placa reconocida como clave primaria. El módulo ejecuta una sentencia SELECT sobre nuestra tabla sintetica de registros y, si existe un registro con esa matrícula, retorna un diccionario con todos los campos asociados, incluyendo el nombre del propietario, el estado de procedencia, el estatus legal (por ejemplo, \quotes{regular}, \quotes{robado} o \quotes{reportado}), y la fecha de registro, entre otros, en caso contrario, se retorna un mensaje de advertencia.
 %endregion
+
+%region MLP-Manager
+\subsection*{MLP-Manager}
+\addcontentsline{toc}{subsection}{MLP-Manager}
+\textit{Mexican Licence Plate Manager} (MLP-Manager) constituye un módulo complementario, una capa de administración y verificación visual del sistema LPR-Sentinel, diseñada para proporcionar una interfaz gráfica de usuario que permita la gestión integral de la base de datos vehicular sintética generada por MLP-Generator. Este módulo responde a la necesidad de dotar al sistema de una herramienta accesible para la inspección, modificación y consulta de los registros almacenados, extendiendo las capacidades del pipeline original hacia un entorno de administración visual que no depende de consultas manuales mediante línea de comandos o interacciones directas con el motor SQLite.
+
+La arquitectura de MLP-Manager se ha implementado sobre el framework Windows Forms de .NET, empleando el lenguaje C\# y el proveedor oficial de SQLite como puente de comunicación con la base de datos. El módulo se comunica directamente con la base de datos generada por MLP-Generator, interpretando su esquema relacional y presentando su contenido en una disposición tabular que replica su estructura a 8 columnas: Matricula, Estado, Marca/Modelo, Color del vehículo, Estatus Legal, Propietario Virtual, Fecha de registro y Filename.
+
+La interfaz principal del administrador, ilustrada en la Figura \ref{fig_manager_ui}, se organiza en dos regiones. En el sector izquierdo se concentran los controles de operación, agrupando cinco botones de acción principal correspondientes a las operaciones de la base de datos: \texttt{Cargar BD}, \texttt{Agregar}, \texttt{Actualizar}, \texttt{Eliminar} y \texttt{Limpiar} registros, así como un botón de \texttt{Búsqueda} que activa una funcionalidad de consulta específica. El sector derecho, que ocupa aproximadamente el 80\% del área de la ventana, corresponde a un visor tabular de la tabla activa, ofreciendo una representación inmediata del conjunto completo de registros contenidos en la base de datos.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[scale=0.5]{figures/manager_ui.png}
+\caption[Interfaz principal del módulo MLP-Manager]{Interfaz principal del módulo MLP-Manager. La zona izquierda agrupa las operaciones CRUD y consulta, mientras que la zona derecha se despliega el contenido tabular de la base de datos.}
+\label{fig_manager_ui}
+\end{figure}
+
+\subsubsection*{Conectividad}
+\addcontentsline{toc}{subsubsection}{Conectividad}
+El módulo implementa un patrón de conexión dinámica que permite al operador seleccionar cualquier archivo con extensión \texttt{.db} compatible mediante un cuadro de diálogo estándar de exploración de archivos. La conexión con el motor SQLite se establece exclusivamente durante las operaciones de consulta o modificación de los registros, garantizando la liberación inmediata de recursos siguiendo las mejores prácticas de gestión de memoria en .NET.
+
+La integración con la base de datos sintética no requiere modificaciones en el esquema generado por MLP-Generator. La aplicación obtiene automaticamente la lista de tablas disponibles en la base de datos cargada, y selecciona aquella que corresponde a los registros vehiculares. Esta flexibilidad permite que distintas versiones del dataset, generadas con diferentes parámetros de volumen o distribución estatal, sean cargadas sin requerir modificaciones por parte del administrador.
+
+\subsubsection*{Operaciones de manipulación de datos}
+\addcontentsline{toc}{subsubsection}{Operaciones de manipulación de datos}
+Las cuatro operaciones fundamentales del CRUD (\textit{Create, Read, Update, Delete}) han sido implementadas siguiendo un patrón de ventanas modales que aislan la lógica de edición del contexto principal de visualización. Con esta implementación se evita la manipulación directa sobre el visualizador, reduciendo la probabilidad de errores de entrada y simplificando la implementación de validaciones complejas.
+
+La operación de lectura se consigue al presionar el botón \texttt{Cargar BD}, el sistema invoca una ventana de diálogo que filtra las extensiones \texttt{.db}, \texttt{.sqlite} y \texttt{.sqlite3}. Una vez seleccionado el archivo a través de esta ventana de exploración de archivos, MLP-Manager construye una conexión con el archivo cargado, abre un canal de comunicación y ejecuta una consulta SQL que arroja como resultado todos los registros de la base de datos. Los resultados se instancian sobre un objeto del tipo \texttt{DataTable}, una clase nativa de C\#, cuyas propiedades permiten estructurar al objeto como una tabla dentro del visualizador.
+
+La operación de creación despliega una ventana secundaria, ilustrada en la Figura \ref{fig_manager_add}, que presenta campos de entrada para las ocho columnas del registro. Los campos de texto que requieren datos genéricos como el nombre del propietario o el número de serie de la matricula se implementan mediante controles \texttt{TextBox}, mientras que el Estatus Legal, el tipo, color y marca del coche emplea un \texttt{ComboBox} con opciones precargadas. El campo de fecha utiliza un \texttt{DateTimePicker} configurado con el formato personalizado \texttt{yyyy-MM-dd}, garantizando la coherencia con el almacenamiento en SQLite. Al presionar el botón \texttt{Guardar}, el formulario ejecuta una sentencia SQL del tipo \texttt{INSERT}, validando previamente que ningún campo obligatorio permanezca vacío. La operación cierra el formulario y notifica al formulario principal mediante una ventana de diálogo, actualizando automáticamente el visualizador para presenciar el cambio.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[scale=0.5]{figures/manager_add.png}
+\caption[Formulario de agregación de registros en MLP-Manager]{Formulario de agregación de registros en MLP-Manager. Los campos se organizan en un panel a dos columnas, con etiquetas informativas y elementos de entrada. El botón Guardar ejecuta la inserción SQL mientras que el botón Cancelar descarta la operación sin efectos en la base de datos.}
+\label{fig_manager_add}
+\end{figure}
+
+La operación de actualización sigue un patrón similar a la operación de nuevo registro, con la diferencia de que en este nuevo formulario de edición se precargan los valores actuales de la fila del registro seleccionado (Ver Figura~\ref{fig_manager_update}). Para ello, el administrador debe seleccionar la fila que se desea actualizar mediante un click sobre el primer elemento de la primera fila por actualizar, esto permitirá que todos los elementos de esa misma fila se seleccionen. El formulario de actualización recibe esta fila como parámetro al presionar el botón de actualización, y extrae los ocho valores correspondientes asignándolos a los controles de entrada antes de hacer visible la nueva ventana. Posteriormente el administrador será capaz de modificar manualmente cada campo y, al confirmar los cambios, el sistema ejecuta una sentencia SQL del tipo \texttt{UPDATE}, permitiendo incluso que el usuario modifique el valor de la propia matrícula sin perder la referencia al registro original.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[scale=0.5]{figures/manager_update.png}
+\caption[Formulario de actualización de registros en MLP-Manager]{Formulario de actualización de registros en MLP-Manager. Los campos se organizan en un panel a tres columnas, con etiquetas informativas y elementos de entrada. El botón Actualizar ejecuta la inserción SQL mientras que el botón Cancelar descarta la operación sin efectos en la base de datos.}
+\label{fig_manager_update}
+\end{figure}
+
+Finalmente, la operación de eliminación de registro implementa una verificación de seguridad mediante un cuadro de diálogo \texttt{MessageBox} con botones \texttt{Yes/No}. Esta confirmación evita eliminaciones accidentales. Una vez confirmada la acción, el sistema ejecuta una operación SQL del tipo \texttt{DELETE}, reportando el éxito mediante otra ventana de diálogo y actualizando automáticamente la tabla para reflejar el estado actualizado.
+
+\subsubsection*{Sistema de consulta por matrícula}
+\addcontentsline{toc}{subsubsection}{Sistema de consulta por matrícula}
+Una de las funcionalidades más importantes de MLP-Manager es su módulo de búsqueda para la validación de matrículas. Al presionar el botón \texttt{Buscar} en la interfaz principal, se despliega una nueva ventana independiente dedicada a extraer un registro a partir de su matrícula y presentar todos sus atributos en campos de solo lectura, mientras se reporta la latencia de la consulta.
+
+Su interfaz se organiza en tres regiones: un panel superior que contiene el campo de entrada de texto para la matrícula, el botón de ejecución de búsqueda y un espacio reservado para la visualización de resultados. Cuando el usuario introduce una matrícula y presiona el botón \texttt{Buscar}, el sistema ejecuta la consulta SQL \texttt{SELECT} mediante las funciones nativas de .NET. Internamente, la operación de búsqueda implementa un algoritmo de búsqueda por árbol B+ cuya complejidad temporal es $O(log n)$, esto implica que el tiempo de procesamiento crece en función de los datos de entrada aproximadamente a una razón logaritmica de la forma $log n$, lo que permite un tiempo de respuesta entre 1 y 7 ms considerando 8,000 registros disponibles.
+
+Inmediatamente después de recibir la respuesta desde la base de datos, se decodifica el resultado mostrando los valores en las columnas correspondientes si existe coincidencia, o mostrando un mensaje informativo en caso contrario.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[scale=0.5]{figures/manager_search.png}
+\caption[Formulario de búsqueda]{Formulario de búsqueda. El campo de entrada acepta la matrícula objetivo, el botón Buscar ejecuta la consulta parametrizada, y la etiqueta superior muestra el tiempo de respuesta en milisegundos. Los ocho campos inferiores presentan los atributos completos del registro encontrado en modo solo lectura.}
+\label{fig_manager_search}
+\end{figure}
+
+\subsubsection*{Integración con el sistema LPR-Sentinel}
+\addcontentsline{toc}{subsubsection}{Integración con el sistema LPR-Sentinel}
+MLP-Manager se considera como un módulo independiente, una funcionalidad administrativa que completa la cadena de herramientas de LPR-Sentinel. Mientras que MLP-Generator provee los datos sintéticos y MLP-Pipeline ejecuta el reconocimiento automático, MLP-Manager ofrece la capacidad de inspección y corrección manual de esos mismos datos. 
+
+Su implementación sobre Windows Forms y C\#, si bien podría parecer una desviación del stack de Python utilizado en el resto de módulos, responde más a nuestras limitantes de conocimiento referentes a la creación de interfaces visualices, mismas que actualmente son precarias con el primero. Sin embargo, esta variante demuestra que el sistema se puede beneficiar de la madurez de otros ecosistemas como lo es .NET, incluso extenderse a implementaciones web donde el control se garantice entre múltiples plataformas en la nube.
