@@ -32,7 +32,8 @@ from typing import Tuple, Dict, List, Optional
 
 #region Variables
 # Ubicacion de los modelos y sus configuraciones
-DETECTOR_ONNX_MODEL_PATH = "./models/MLP_Detector.onnx"
+#DETECTOR_ONNX_MODEL_PATH = "./models/MLP_Detector.onnx"
+DETECTOR_ONNX_MODEL_PATH = "./models/MLP_Detector_v8n.onnx"
 OCR_ONNX_MODEL_PATH = "./models/MLP_Recognizer.onnx"
 OCR_CONFIG_PATH = "./config/plate_config.yaml"
 DATABASE_PATH = "./database/MLPR.db"
