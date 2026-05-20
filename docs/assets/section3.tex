@@ -68,7 +68,7 @@ MLP-Detector fue entrenado, probado y validado utilizando el dataset público di
 \label{fig:confusion_matrix}
 \end{figure}
 
-Los resultados globales muestran un desempeño sólido, con valores de precisión y recall cercanos al 97.6\%, y un promedio de precisión mAP@0.5 de 0.989, lo que indica una alta confiabilidad en las detecciones incluso con pocas épocas de entrenamiento (14 épocas). En contraste, el promedio de precisión mAP@0.5:0.95, con un valor de 0.762, refleja la variabilidad en la exactitud de las cajas cuando se exige un mayor solapamiento. A nivel de clases, la clase correspondiente a la detección de matrícula alcanzó una precisión del 98.7\% y un promedio de precisión mAP@0.5 de 0.992, mientras que la clase de detección de vehículo obtuvo una precisión del 96.5\% y un promedio de precisión mAP@0.5 de 0.987, mostrando un comportamiento consistente en ambos casos. La Figura~\ref{fig:pred_examples} ilustra un ejemplo de predicción sobre las imágenes de validación, donde se detecta la presencia de un vehículo y una matrícula, cada clase resaltada dentro de una caja delimitadora comparada con la anotación manual para calcular las métricas de rendimiento.
+Los resultados globales muestran un desempeño sólido, con valores de precisión y recall cercanos al 97.6\%, y un promedio de precisión mAP@0.5 de 0.989, lo que indica una alta confiabilidad en las detecciones con 95 épocas de entrenamiento. En contraste, el promedio de precisión mAP@0.5:0.95, con un valor de 0.762, refleja la variabilidad en la exactitud de las cajas cuando se exige un mayor solapamiento. A nivel de clases, la clase correspondiente a la detección de matrícula alcanzó una precisión del 98.7\% y un promedio de precisión mAP@0.5 de 0.992, mientras que la clase de detección de vehículo obtuvo una precisión del 96.5\% y un promedio de precisión mAP@0.5 de 0.987, mostrando un comportamiento consistente en ambos casos. La Figura~\ref{fig:pred_examples} ilustra un ejemplo de predicción sobre las imágenes de validación, donde se detecta la presencia de un vehículo y una matrícula, cada clase resaltada dentro de una caja delimitadora comparada con la anotación manual para calcular las métricas de rendimiento.
 \vspace{0.5 cm}
 
 \begin{figure}[htb]
@@ -180,13 +180,26 @@ El pipeline completo del sistema LPR-Sentinel fue evaluado sobre un conjunto de 
 \label{fig:unity_sim}
 \end{figure}
 
-Los resultados obtenidos muestran que, sobre el total de 100 imágenes evaluadas, el sistema logró una tasa de éxito integral del 46\%. Este valor se compone de 28 aciertos en el conjunto diurno (56\% de éxito) y 18 aciertos en el conjunto nocturno (36\% de éxito). Del total de 100 imágenes, el detector logró localizar exitosamente la placa en 75 de ellas (75\% de tasa de detección), distribuidas en 40 imágenes diurnas (80\%) y 35 imágenes nocturnas (70\%). Sobre estas 75 detecciones exitosas, el reconocedor identificó correctamente la matrícula completa en 46 casos (61.3\% de precisión sobre detectadas), con un rendimiento del 70\% en imágenes diurnas (28 de 40) y del 51.4\% en imágenes nocturnas (18 de 35). Es importante destacar que, en los casos donde la detección fue exitosa, el reconocedor demostró ser funcional, alcanzando una precisión del 61.3\% sobre las regiones de interés extraídas, lo que sugiere que, si bien el detector constituye la principal deficiencia del pipeline, el reconocedor también presenta margen de mejora.
+Los resultados obtenidos muestran que, sobre el total de 100 imágenes evaluadas, el sistema logró una tasa de éxito integral del 71\%. Este valor se compone de 41 aciertos en el conjunto diurno (82\% de éxito en la condición diurna) y 30 aciertos en el conjunto nocturno (60\% de éxito en la condición nocturna). Sobre estas 71 detecciones exitosas, el detector consiguió una confianza promedio del 82\%, mientras que el reconocedor reportó una precisión promedio del 74\% sobre las regiones de interés extraídas, lo que sugiere que, si bien el reconocedor constituye la principal deficiencia del pipeline, el detector también presenta margen de mejora.
 
-La latencia media del pipeline en el equipo de referencia (procesador AMD Ryzen 7 5700G) fue de 133.79 milisegundos por imagen, 3.5 veces inferior a resultados reportados con otras especificaciones de hardware como en \cite{hendry-chen2018}, pero aun alejada del rendimiento obtenido por \cite{li-chen2020}. Nuestro tiempo mínimo registrado fue de 95.83 milisegundos y un máximo de 736.22 milisegundos. El consumo de CPU se situó en un promedio del 220\% sobre la capacidad total del procesador, lo que equivale aproximadamente a 2.2 núcleos activos de los 8 disponibles, mientras que el consumo de memoria RAM se mantuvo en 276 megabytes por inferencia. Estas métricas permiten alcanzar un rendimiento de 7.47 imágenes por segundo, equivalente a 448 imágenes por minuto, un rendimiento más que suficiente para aplicaciones que requieren respuesta en tiempo real.
+La latencia media del pipeline en el equipo de referencia (procesador AMD Ryzen 7 5700G) fue de 64.96 milisegundos por imagen, 5 veces superior a resultados reportados con otras especificaciones de hardware como en \cite{hendry-chen2018}, pero aun alejada del rendimiento obtenido por \cite{li-chen2020}. Nuestro tiempo mínimo registrado fue de 47.42 milisegundos y un máximo de 97.76 milisegundos. El consumo de CPU se situó en un promedio del 272.8\% sobre la capacidad total del procesador, lo que equivale aproximadamente a 2.7 núcleos activos de los 8 disponibles, mientras que el consumo de memoria RAM se mantuvo en 172.75 megabytes por inferencia. Estas métricas permiten alcanzar un rendimiento de 15.39 imágenes por segundo, equivalente a 900 imágenes por minuto, un rendimiento más que suficiente para aplicaciones que requieren respuesta en tiempo real.
 
-Al trasladar la evaluación a la plataforma objetivo (Raspberry Pi 4B), el tiempo de procesamiento promedio se incrementó a 1,350.30 milisegundos por imagen, con un tiempo mínimo de 1,193.27 milisegundos y un máximo de 1,879.56 milisegundos. Este incremento representa un factor de ralentización de 10.1 veces en comparación con el equipo de referencia. El consumo de CPU en la Raspberry Pi se mantuvo en un promedio del 60\% (con valores que oscilaron entre 39.8\% y 79.7\%), mientras que el consumo de memoria RAM se estabilizó en aproximadamente 304 megabytes por inferencia. Como consecuencia, el rendimiento se redujo a 0.73 imágenes por segundo, es decir, 44 imágenes por minuto. Este rendimiento, aunque insuficiente para aplicaciones que demandan respuesta instantánea, resulta aceptable para tareas de procesamiento asíncrono o para escenarios de baja afluencia vehicular.
 
-La Tabla \ref{tab:pipeline_results} resume los resultados integrales del pipeline, incluyendo las tasas de éxito por tipo de imagen y las métricas de latencia y consumo de recursos en ambas plataformas. La precisión neta del sistema, medida como la tasa de éxito sobre las imágenes donde se logró detección, se mantuvo idéntica en ambas plataformas (60\% sobre detectadas), dado que los modelos ONNX producen los mismos resultados numéricos independientemente del hardware implementado, siempre que se utilice el mismo proveedor de ejecución (CPU para nuestra evaluación, no se implementó ningún provedor para tarjetas gráficas al no disponer de una). Esto confirma que la caída de rendimiento observada en la Raspberry Pi afecta a la velocidad de procesamiento y al consumo de recursos, pero no a la calidad de las predicciones.
+
+
+
+
+
+
+
+
+
+
+
+%Actualizar resultados de Raspberru
+Al trasladar la evaluación a la plataforma objetivo (Raspberry Pi 4B), el tiempo de procesamiento promedio se incrementó a 660.36 milisegundos por imagen, con un tiempo mínimo de 577.01 milisegundos y un máximo de 922.53 milisegundos. Este incremento representa un factor de ralentización de 10.1 veces en comparación con el equipo de referencia. El consumo de CPU en la Raspberry Pi se mantuvo en un promedio del 58\% (con valores que oscilaron entre 39.7\% y 79.7\%), mientras que el consumo de memoria RAM se estabilizó en aproximadamente 199.13 megabytes por inferencia. Como consecuencia, el rendimiento se redujo a 0.86 imágenes por segundo, es decir, 51 imágenes por minuto. Este rendimiento, aunque insuficiente para aplicaciones que demandan respuesta instantánea, resulta aceptable para tareas de procesamiento asíncrono o para escenarios de baja afluencia vehicular.
+
+La Tabla \ref{tab:pipeline_results} resume los resultados integrales del pipeline, incluyendo las tasas de éxito por tipo de imagen y las métricas de latencia y consumo de recursos en ambas plataformas. La precisión neta del sistema, medida como la tasa de éxito sobre las imágenes donde se logró detección, se mantuvo idéntica en ambas plataformas, dado que los modelos ONNX producen los mismos resultados numéricos independientemente del hardware implementado, siempre que se utilice el mismo proveedor de ejecución (CPU para nuestra evaluación, no se implementó ningún provedor para tarjetas gráficas al no disponer de una). Esto confirma que la caída de rendimiento observada en la Raspberry Pi afecta a la velocidad de procesamiento y al consumo de recursos, pero no a la calidad de las predicciones.
 
 \sffamily
 \footnotesize
@@ -209,27 +222,27 @@ after upper=\vspace{2mm}
 \textbf{Métrica} & \textbf{Diurno (50 imágenes)} & \textbf{Nocturno (50 imágenes)} & \textbf{Total (100 imágenes)} \\
 \midrule
 %Tasa de detección exitosa & 54.0\% & 36.0\% & 45.0\% \\
-Tasa de reconocimiento exacto (sobre detectadas) & 70.0\% & 51.4\% & 61.3\% \\
-Tasa de éxito en consulta a base de datos & 100\% & 100\% & 100\% \\
-\textbf{Tasa de éxito integral} & \textbf{56.0\%} & \textbf{36.0\%} & \textbf{46.0\%} \\
+Tasa de reconocimiento exacto & 82.0\% & 60\% & 71\% \\ % Validado
+Tasa de éxito en consulta a base de datos & 100\% & 100\% & 100\% \\ % Validado
+%\textbf{Tasa de éxito integral} & \textbf{41\%} & \textbf{30\%} & \textbf{71.0\%} \\ % Validado
 \midrule
-Latencia media (Ryzen 7 5700G) (ms) & 129.71 & 137.95 & 133.79 \\ % Ok
-Latencia media (Raspberry Pi 4B) (ms) & 1,384.08 & 1,367.37 & 1,350.30 \\
-Factor de ralentización (Raspberry vs Ryzen) & 10.67x & 9.91x & 10.09x \\
+Latencia media (Ryzen 7 5700G) (ms) & 65.61 & 64.31 & 64.96 \\ % Validado
+Latencia media (Raspberry Pi 4B) (ms) & 670.59 & 650.13 & 660.36 \\ % Validado
+Factor de ralentización (Raspberry vs Ryzen) & 10.22x & 10.10x & 10.16x \\ % Validado
 \midrule
-Consumo de CPU (Ryzen 7 5700G) (\%) & 233.90 & 208.10 & 221.13 \\ % Ok
-Consumo de RAM (Ryzen 7 5700G) (MB) & 276.98 & 274.33 & 275.67 \\
-Consumo de CPU (Raspberry Pi 4B) (\%) & 61.86 & 62.37 & 62.11 \\
-Consumo de RAM (Raspberry Pi 4B) (MB) & 304.76 & 301.84 & 303.31 \\
+Consumo de CPU (Ryzen 7 5700G) (\%) & 269.93 & 275.83 & 272.88 \\ % Validado
+Consumo de RAM (Ryzen 7 5700G) (MB) & 133.79 & 172.10 & 172.75 \\ % Validado
+Consumo de CPU (Raspberry Pi 4B) (\%) & 57.74 & 59.12 & 58.43 \\ % Validado
+Consumo de RAM (Raspberry Pi 4B) (MB) & 199.23 & 199.03 & 199.13 \\ % Validado
 \midrule
-Rendimiento (Ryzen 7 5700G) (img/segundo) & - & - & 7.47 \\
-Rendimiento (Raspberry Pi 4B) (img/segundo) & - & - & 0.73 \\
+Rendimiento (Ryzen 7 5700G) (img/segundo) & - & - & 15.39 \\ % Validado
+Rendimiento (Raspberry Pi 4B) (img/segundo) & - & - & 0.86 \\ % Validado
 \end{tabularx}
 \end{tcolorbox}
 \normalsize
 \normalfont
 
-Los fallos del pipeline se debieron principalmente a dos causas. La primera y más relevante fue la detección fallida en imágenes con condiciones críticas, especialmente en escenas nocturnas con iluminación insuficiente, reflejos especulares, o placas muy inclinadas respecto al plano de la cámara con ángulos superiores a 60 grados. De las 100 imágenes evaluadas, el detector no logró localizar la placa en 25 casos, de los cuales 15 correspondían al conjunto nocturno y 10 al conjunto diurno. La segunda causa fue el reconocimiento erróneo en imágenes donde la detección fue correcta, pero la región de interés presentaba degradaciones que dificultaban la discriminación de caracteres visualmente similares. En 29 imágenes, el detector localizó correctamente la placa, pero el reconocedor falló en la transcripción exacta de la matrícula. Los errores más frecuentes incluyeron confusiones entre el dígito 8 y el 5, entre las letras D y R, entre las letras A y T, y entre las letras G y J. En ningún caso se produjeron falsos positivos en la consulta a la base de datos, dado que el sistema utiliza la matrícula reconocida como clave primaria y simplemente retorna un registro vacío cuando el texto no existe en la base de datos, lo que garantiza la integridad de las consultas.
+Los fallos del pipeline se debieron principalmente a la detección fallida en imágenes con condiciones críticas, especialmente en escenas nocturnas con iluminación insuficiente, reflejos especulares, o placas muy inclinadas respecto al plano de la cámara con ángulos superiores a 60 grados, cuya región de interés presentaba degradaciones que dificultaban la discriminación de caracteres visualmente similares. En 29 imágenes, el detector localizó correctamente la placa, pero el reconocedor falló en la transcripción exacta de la matrícula por uno o dos caracteres. Los errores más frecuentes incluyeron confusiones entre el carácter 8 y el B, entre las letras D y R, entre las letras A y T, y entre las letras G, F y J. En ningún caso se produjeron falsos positivos en la consulta a la base de datos, dado que el sistema utiliza la matrícula reconocida como clave primaria y retorna un registro vacío cuando el texto no existe en la base de datos, lo que garantiza la integridad de las consultas.
 
 La Figura~\ref{fig:pipeline_success_examples} muestra tres ejemplos representativos de éxito del pipeline. En el primer caso, correspondiente a una imagen diurna con la placa en primer plano, el detector alcanzó una confianza del 76\% y el reconocedor identificó correctamente la matrícula completa. En el segundo caso, una imagen nocturna con iluminación artificial, la confianza del detector fue del 76\% y el reconocimiento también fue exacto. En el tercer caso, una placa parcialmente sobre iluminada por las luces del vehículo, el detector logró una confianza del 77\% identificando correctamente los caracteres. En todos estos casos, la consulta a la base de datos retornó la información vehicular asociada, completando exitosamente el pipeline.
 
