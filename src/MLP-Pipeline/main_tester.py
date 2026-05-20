@@ -32,18 +32,18 @@ from datetime import datetime
 
 #region Variables
 # Rutas de modelos y configuraciones
-DETECTOR_MODEL_PATH = "../MLP-Detector/models/best.onnx" # Modelo YOLO para deteccion
-OCR_MODEL_PATH = "../MLP-Recognizer/models/best.onnx" # Modelo OCR para reconocimiento
-OCR_CONFIG_PATH = "../MLP-Recognizer/config/plate_config.yaml" # Configuracion del modelo OCR
-DATABASE_PATH = "../MLP-Register/database/MLPR.db" # Ruta a la base de datos SQLite
-CSV_METADATA_PATH = "../MLP-Generator/dataset/license_plates_metadata.csv" # CSV dataset
+DETECTOR_MODEL_PATH = "./models/MLP_Detector_v8n.onnx" # Modelo YOLO para deteccion
+OCR_MODEL_PATH = "./models/MLP_Recognizer_v2.onnx" # Modelo OCR para reconocimiento
+OCR_CONFIG_PATH = "./config/plate_config.yaml" # Configuracion del modelo OCR
+DATABASE_PATH = "./database/MLPR.db" # Ruta a la base de datos SQLite
+CSV_METADATA_PATH = "./database/license_plates_metadata.csv" # CSV dataset
 
 # Constantes del detector
 DETECTOR_IMG_SIZE = 640 # Tamanio de entrada del detector
-DETECTOR_CONF_THRESHOLD = 0.7 # Umbral de confianza para deteccion
+DETECTOR_CONF_THRESHOLD = 0.5 # Umbral de confianza para deteccion
 DETECTOR_NMS_THRESHOLD = 0.45 # Umbral NMS
 DETECTOR_PLATE_CLASS_ID = 0 # ID de clase para placa vehicular
-ROI_MARGIN = 5 # Margen para extraer ROI
+ROI_MARGIN = 1 # Margen para extraer ROI
 #endregion
 
 #region Main class
@@ -769,7 +769,7 @@ class MexicanLicencePlateDetector:
             results.append(record)
             
             # Mostrar progreso
-            status = "✓" if acierto else "✗"
+            status = "Ok" if acierto else "Not ok"
             print(f"[{idx+1}/{len(gt_df)}] {status} {row['filename']}: {matricula_detectada} (real: {matricula_real}) - {tiempo_respuesta_ms:.0f}ms")
         
         tiempo_total_evaluacion = time.time() - inicio_evaluacion

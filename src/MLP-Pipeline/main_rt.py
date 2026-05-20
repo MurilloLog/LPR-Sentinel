@@ -36,8 +36,9 @@ import signal
 
 #region Variables
 # Rutas de modelos y configuraciones
-DETECTOR_MODEL_PATH = "../MLP-Detector/models/best.onnx" # Modelo YOLO para deteccion
-OCR_MODEL_PATH = "../MLP-Recognizer/models/best.onnx" # Modelo OCR para reconocimiento
+#DETECTOR_MODEL_PATH = "../MLP-Detector/models/best.onnx" # Modelo YOLO para deteccion
+DETECTOR_MODEL_PATH = "./models/MLP_Detector_v8n.onnx"
+OCR_MODEL_PATH = "./models/MLP_Recognizer_v2.onnx"
 OCR_CONFIG_PATH = "../MLP-Recognizer/config/plate_config.yaml" # Configuracion del modelo OCR
 DATABASE_PATH = "../MLP-Register/database/MLPR.db" # Ruta a la base de datos SQLite
 CSV_METADATA_PATH = "../MLP-Generator/dataset/license_plates_metadata.csv" # CSV dataset
@@ -53,8 +54,8 @@ ROI_MARGIN = 1 # Margen para extraer ROI
 VIDEO_SKIP_FRAMES = 1  # Procesar cada N frames para mejorar rendimiento
 DETECTION_COOLDOWN_FRAMES = 30  # Frames de espera antes de reprocesar misma placa
 
-DEBUG_MODE = True  # Activar modo debugging
-SAVE_DEBUG_FRAMES = True  # Guardar frames para depuración
+DEBUG_MODE = False  # Activar modo debugging
+SAVE_DEBUG_FRAMES = False  # Guardar frames para depuración
 DEBUG_OUTPUT_DIR = "debug_outputs"
 #endregion
 
