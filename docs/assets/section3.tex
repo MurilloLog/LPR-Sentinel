@@ -61,13 +61,6 @@ La fuente tipográfica diseñada reprodujo las proporciones de los caracteres, e
 \addcontentsline{toc}{subsection}{Rendimiento del módulo MLP-Detector}
 MLP-Detector fue entrenado, probado y validado utilizando el dataset público disponible en \cite{roboflow_licenseplate2026}. Dicho conjunto está conformado por 2,559 imágenes de vehículos reales en diversos escenarios como aparcamiento, circulación y primeros planos. Para los experimentos se estableció una partición en subconjuntos de entrenamiento, prueba y validación, siguiendo la configuración provista por la plataforma Roboflow con un 86\% para entrenamiento, 9\% para validación y 5\% para pruebas. La evaluación del modelo se realizó empleando las métricas estándar en detección de objetos: precisión de las cajas delimitadoras, exhaustividad (recall), promedio de precisión a un umbral de Intersección sobre Unión de 0.5 (mAP@0.5), y promedio de precisión en un rango de Intersección sobre Unión entre 0.5 y 0.95 (mAP@0.5:0.95).% Estas métricas permiten cuantificar tanto la proporción de detecciones correctas como la capacidad del modelo para localizar los objetos presentes en las imágenes con exactitud.
 
-\begin{figure}[ht]
-\centering
-\includegraphics[width=0.45\textwidth]{figures/confusion_matrix_normalized.png}
-\caption{Matriz de confusión obtenida durante la validación de MLP-Detector.}
-\label{fig:confusion_matrix}
-\end{figure}
-
 Los resultados globales muestran un desempeño sólido, con valores de precisión y recall cercanos al 97.6\%, y un promedio de precisión mAP@0.5 de 0.989, lo que indica una alta confiabilidad en las detecciones con 95 épocas de entrenamiento. En contraste, el promedio de precisión mAP@0.5:0.95, con un valor de 0.762, refleja la variabilidad en la exactitud de las cajas cuando se exige un mayor solapamiento. A nivel de clases, la clase correspondiente a la detección de matrícula alcanzó una precisión del 98.7\% y un promedio de precisión mAP@0.5 de 0.992, mientras que la clase de detección de vehículo obtuvo una precisión del 96.5\% y un promedio de precisión mAP@0.5 de 0.987, mostrando un comportamiento consistente en ambos casos. La Figura~\ref{fig:pred_examples} ilustra un ejemplo de predicción sobre las imágenes de validación, donde se detecta la presencia de un vehículo y una matrícula, cada clase resaltada dentro de una caja delimitadora comparada con la anotación manual para calcular las métricas de rendimiento.
 \vspace{0.5 cm}
 
@@ -81,7 +74,13 @@ Los resultados globales muestran un desempeño sólido, con valores de precisió
 
 La Figura~\ref{fig:confusion_matrix} presenta la matriz de confusión normalizada obtenida durante la validación, donde se observa una baja tasa de falsos positivos y falsos negativos, evidenciando el equilibrio alcanzado por el modelo. Complementariamente, %la Figura~\ref{fig:pr_curve} muestra las curvas de precisión y exhaustividad en distintos umbrales de confianza, confirmando que el modelo mantiene un alto rendimiento incluso cuando se varía el umbral de decisión. Finalmente, 
 la Tabla~\ref{tab:detector_results} resume los valores obtenidos en cada subconjunto de validación.
-\vspace{0.5 cm}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.45\textwidth]{figures/confusion_matrix_normalized.png}
+\caption{Matriz de confusión obtenida durante la validación de MLP-Detector.}
+\label{fig:confusion_matrix}
+\end{figure}
 
 %\begin{figure}[htb]
 %\centering
@@ -133,10 +132,9 @@ MLP-Recognizer fue entrenado aplicando las 29 transformaciones disponibles sobre
 
 De este conjunto de imágenes, usado exclusivamente para el entrenamiento del modelo OCR, fueron separadas 23,200 muestras correspondientes a la partición 80/10/10 para entrenamiento, prueba y validación respectivamente. La divergencia del modelo entrenado con respecto al conjunto de validación se realizó a través del mismo framework FastPlateOCR empleado durante el entrenamiento, requiriendo un tiempo total de 1349 segundos para validar el conjunto de imágenes, lo que se traduce en un tiempo de procesamiento promedio de 58 milisegundos por imagen.
 
-Para la evaluación se registraron cuatro métricas fundamentales. La primera de ellas, denominada precisión de matrícula, indica el porcentaje de matrículas de la muestra de validación que fueron correctamente clasificadas en su totalidad, es decir, donde todos los caracteres de la matrícula coinciden exactamente con la predicción. La segunda métrica, precisión de los caracteres, refleja la exactitud de los caracteres individuales dentro de las matrículas que fueron correctamente clasificadas, permitiendo cuantificar errores parciales. La tercera métrica, precisión de la longitud de caracteres, mide con qué frecuencia la longitud predicha de la matrícula coincide con la longitud real de la muestra de validación, independientemente del contenido reconocido. Finalmente, la cuarta métrica, denominada frecuencia de inferencia del carácter correcto entre las tres primeras predicciones, calcula con qué frecuencia se incluye el carácter verdadero entre las tres predicciones con mayor probabilidad generadas por el modelo.
+Para la evaluación se registraron cuatro métricas. La primera, denominada precisión de matrícula, indica el porcentaje de matrículas de la muestra de validación que fueron correctamente clasificadas en su totalidad. La segunda métrica, precisión de los caracteres, refleja la exactitud de los caracteres individuales dentro de las matrículas que fueron correctamente clasificadas, permitiendo cuantificar errores parciales. La tercera métrica, precisión de la longitud de caracteres, mide con qué frecuencia la longitud predicha de la matrícula coincide con la longitud real de la muestra de validación, independientemente del contenido reconocido. Finalmente, la cuarta métrica, denominada frecuencia de inferencia del carácter correcto entre las tres primeras predicciones, calcula con qué frecuencia se incluye el carácter verdadero entre las tres predicciones con mayor probabilidad generadas por el modelo.
 
-Los resultados obtenidos demuestran un rendimiento excepcional del reconocedor. La precisión de matrícula alcanzó un valor de 0.9778, lo que indica que más del 97\% de las matrículas de validación fueron reconocidas completamente sin errores. La precisión de los caracteres fue de 0.9959, reflejando una exactitud superior al 99\% en la clasificación de caracteres individuales. La precisión de la longitud de caracteres alcanzó el valor perfecto de 1.0000, evidenciando que el modelo nunca cometió errores en la predicción de la longitud de las matrículas. Finalmente, la frecuencia de inferencia del carácter correcto entre las tres primeras predicciones fue de 0.9977, lo que significa que para más del 99\% de los caracteres, la opción correcta se encontraba entre las tres predicciones de mayor confianza del modelo. La Tabla \ref{tab:augmentation_impact} resume estas métricas de validación, confirmando que el reconocedor es altamente fiable incluso cuando se evalúa sobre un conjunto diverso de imágenes aumentadas que simulan condiciones reales.
-\vspace{0.5 cm}
+La precisión de matrícula alcanzó un valor de 0.9778, lo que indica que más del 97\% de las matrículas de validación fueron reconocidas completamente sin errores. La precisión de los caracteres fue de 0.9959, reflejando una exactitud superior al 99\% en la clasificación de caracteres individuales. La precisión de la longitud de caracteres alcanzó el valor perfecto de 1.0000. Finalmente, la frecuencia de inferencia del carácter correcto entre las tres primeras predicciones fue de 0.9977, lo que significa que para más del 99\% de los caracteres, la opción correcta se encontraba entre las tres predicciones de mayor confianza del modelo. La Tabla \ref{tab:augmentation_impact} resume estas métricas de validación.
 
 \sffamily
 \footnotesize
@@ -175,7 +173,7 @@ El pipeline completo del sistema LPR-Sentinel fue evaluado sobre un conjunto de 
 
 \begin{figure}[ht]
 \centering
-\includegraphics[scale=0.5]{figures/fig_unity_sim.png}
+\includegraphics[scale=0.45]{figures/fig_unity_sim.png}
 \caption[Simulación de capturas usando Unity Engine]{Simulación de capturas usando Unity Engine. Se visualiza la recreación de una calle transitada por vehículos en diversas condiciones ambientales.}
 \label{fig:unity_sim}
 \end{figure}
@@ -184,22 +182,7 @@ Los resultados obtenidos muestran que, sobre el total de 100 imágenes evaluadas
 
 La latencia media del pipeline en el equipo de referencia (procesador AMD Ryzen 7 5700G) fue de 64.96 milisegundos por imagen, 5 veces superior a resultados reportados con otras especificaciones de hardware como en \cite{hendry-chen2018}, pero aun alejada del rendimiento obtenido por \cite{li-chen2020}. Nuestro tiempo mínimo registrado fue de 47.42 milisegundos y un máximo de 97.76 milisegundos. El consumo de CPU se situó en un promedio del 272.8\% sobre la capacidad total del procesador, lo que equivale aproximadamente a 2.7 núcleos activos de los 8 disponibles, mientras que el consumo de memoria RAM se mantuvo en 172.75 megabytes por inferencia. Estas métricas permiten alcanzar un rendimiento de 15.39 imágenes por segundo, equivalente a 900 imágenes por minuto, un rendimiento más que suficiente para aplicaciones que requieren respuesta en tiempo real.
 
-
-
-
-
-
-
-
-
-
-
-
-
-%Actualizar resultados de Raspberru
 Al trasladar la evaluación a la plataforma objetivo (Raspberry Pi 4B), el tiempo de procesamiento promedio se incrementó a 660.36 milisegundos por imagen, con un tiempo mínimo de 577.01 milisegundos y un máximo de 922.53 milisegundos. Este incremento representa un factor de ralentización de 10.1 veces en comparación con el equipo de referencia. El consumo de CPU en la Raspberry Pi se mantuvo en un promedio del 58\% (con valores que oscilaron entre 39.7\% y 79.7\%), mientras que el consumo de memoria RAM se estabilizó en aproximadamente 199.13 megabytes por inferencia. Como consecuencia, el rendimiento se redujo a 0.86 imágenes por segundo, es decir, 51 imágenes por minuto. Este rendimiento, aunque insuficiente para aplicaciones que demandan respuesta instantánea, resulta aceptable para tareas de procesamiento asíncrono o para escenarios de baja afluencia vehicular.
-
-La Tabla \ref{tab:pipeline_results} resume los resultados integrales del pipeline, incluyendo las tasas de éxito por tipo de imagen y las métricas de latencia y consumo de recursos en ambas plataformas. La precisión neta del sistema, medida como la tasa de éxito sobre las imágenes donde se logró detección, se mantuvo idéntica en ambas plataformas, dado que los modelos ONNX producen los mismos resultados numéricos independientemente del hardware implementado, siempre que se utilice el mismo proveedor de ejecución (CPU para nuestra evaluación, no se implementó ningún provedor para tarjetas gráficas al no disponer de una). Esto confirma que la caída de rendimiento observada en la Raspberry Pi afecta a la velocidad de procesamiento y al consumo de recursos, pero no a la calidad de las predicciones.
 
 \sffamily
 \footnotesize
@@ -242,22 +225,24 @@ Rendimiento (Raspberry Pi 4B) (img/segundo) & - & - & 0.86 \\ % Validado
 \normalsize
 \normalfont
 
+La Tabla \ref{tab:pipeline_results} resume los resultados integrales del pipeline, incluyendo las tasas de éxito por tipo de imagen y las métricas de latencia y consumo de recursos en ambas plataformas. La precisión neta del sistema, medida como la tasa de éxito sobre las imágenes donde se logró detección, se mantuvo idéntica en ambas plataformas, dado que los modelos ONNX producen los mismos resultados numéricos independientemente del hardware implementado, siempre que se utilice el mismo proveedor de ejecución (CPU para nuestra evaluación, no se implementó ningún provedor para tarjetas gráficas al no disponer de una). Esto confirma que la caída de rendimiento observada en la Raspberry Pi afecta a la velocidad de procesamiento y al consumo de recursos, pero no a la calidad de las predicciones.
+
 Los fallos del pipeline se debieron principalmente a la detección fallida en imágenes con condiciones críticas, especialmente en escenas nocturnas con iluminación insuficiente, reflejos especulares, o placas muy inclinadas respecto al plano de la cámara con ángulos superiores a 60 grados, cuya región de interés presentaba degradaciones que dificultaban la discriminación de caracteres visualmente similares. En 29 imágenes, el detector localizó correctamente la placa, pero el reconocedor falló en la transcripción exacta de la matrícula por uno o dos caracteres. Los errores más frecuentes incluyeron confusiones entre el carácter 8 y el B, entre las letras D y R, entre las letras A y T, y entre las letras G, F y J. En ningún caso se produjeron falsos positivos en la consulta a la base de datos, dado que el sistema utiliza la matrícula reconocida como clave primaria y retorna un registro vacío cuando el texto no existe en la base de datos, lo que garantiza la integridad de las consultas.
 
 La Figura~\ref{fig:pipeline_success_examples} muestra tres ejemplos representativos de éxito del pipeline. En el primer caso, correspondiente a una imagen diurna con la placa en primer plano, el detector alcanzó una confianza del 76\% y el reconocedor identificó correctamente la matrícula completa. En el segundo caso, una imagen nocturna con iluminación artificial, la confianza del detector fue del 76\% y el reconocimiento también fue exacto. En el tercer caso, una placa parcialmente sobre iluminada por las luces del vehículo, el detector logró una confianza del 77\% identificando correctamente los caracteres. En todos estos casos, la consulta a la base de datos retornó la información vehicular asociada, completando exitosamente el pipeline.
 
 \begin{figure}[htb]
 \centering
-\includegraphics[width=0.9\textwidth]{figures/True_inference.png}
+\includegraphics[width=0.8\textwidth]{figures/True_inference.png}
 \caption[Ejemplos de éxito del pipeline LPR-Sentinel]{Ejemplos de éxito del pipeline LPR-Sentinel. Izquierda: placa diurna en primer plano con confianza de detección del 76\% y reconocimiento exacto. Centro: placa nocturna con iluminación artificial y confianza del 76\%. Derecha: placa parcialmente sobre iluminada con confianza del 77\% y reconocimiento exacto.}
 \label{fig:pipeline_success_examples}
 \end{figure}
 
-Por otro lado, la Figura~\ref{fig:pipeline_failure_examples} ilustra los casos de fallo más representativos. En el primer ejemplo, una placa con rotación extrema superior a 70 grados no fue detectada por el modelo, resultando en un fallo en la primera etapa del pipeline. En el segundo caso, el detector localizó correctamente la placa, pero la perspectiva de captura provocó que el reconocedor confundiera la letra U con el guion separador, con una confianza de solo el 63\%, lo que derivó en un reconocimiento erróneo al no superar el umbral de confianza. En el tercer ejemplo, una placa capturada desde un ángulo extremo redujo drásticamente el contraste de la matrícula y su legibilidad, impidiendo que el reconocedor identificara correctamente los caracteres. Estos casos representan las condiciones más complejas dentro del conjunto de evaluación y evidencian las principales áreas de mejora para futuras iteraciones del sistema.
+Por otro lado, la Figura~\ref{fig:pipeline_failure_examples} ilustra los casos de fallo más representativos. En el primer ejemplo, una placa con rotación extrema superior a 70 grados no fue detectada por el modelo, resultando en un fallo en la primera etapa del pipeline. En el segundo caso, el detector localizó correctamente la placa, pero la perspectiva de captura provocó que el reconocedor confundiera la letra U con el guion separador, con una confianza de solo el 63\%, lo que derivó en un reconocimiento erróneo al no superar el umbral de confianza. En el tercer ejemplo, una placa capturada desde un ángulo extremo redujo drásticamente el contraste de la matrícula y su legibilidad, impidiendo que el reconocedor identificara correctamente los caracteres.
 
 \begin{figure}[htb]
 \centering
-\includegraphics[width=0.9\textwidth]{figures/False_inference.png}
+\includegraphics[width=0.8\textwidth]{figures/False_inference.png}
 \caption[Ejemplos de fallo del pipeline LPR-Sentinel]{Ejemplos de fallo del pipeline. Izquierda: placa con rotación extrema superior a 70 grados que impide la detección. Centro: perspectiva de captura que provoca confusión entre la letra U y el separador con confianza del 63\%. Derecha: ángulo extremo que reduce el contraste y dificulta el reconocimiento de la placa.}
 \label{fig:pipeline_failure_examples}
 \end{figure}
