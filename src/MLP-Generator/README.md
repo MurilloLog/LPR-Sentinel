@@ -1,21 +1,64 @@
-# Mexican License Plate Generator
+# Mexican License Plate Generator (MLP-Generator)
 
-A Python-based synthetic data generator for Mexican license plates following the **NOM-001-SCT-2-2016** standard. This tool creates realistic license plate images with associated metadata for training machine learning models, particularly for OCR and license plate recognition systems.
+The **```MLP-Generator```** is the foundational module of the LPR-Sentinel pipeline, responsible for producing high-fidelity synthetic training data that adheres to the **NOM-001-SCT-2-2016** Mexican regulatory standard. By programmatically generating plates, the system avoids the privacy concerns of using real-world imagery while ensuring the OCR model (MLP-Recognizer) is exposed to the full diversity of Mexican state-specific formats, colors, and fonts.
 
-## Overview
+## Core Logic and Architecture
+The generation process is encapsulated in the ```LicensePlateGenerator``` class. It orchestrates the selection of state templates, character generation according to regulatory ranges, and the rendering of text using a specialized font.
 
-This generator produces synthetic Mexican license plates for all 32 Mexican states, following the official format specifications. Each generated plate includes realistic templates, metadata, and is saved with the license plate text as the filename for easy image-label association.
+### STATE_RANGES Configuration
+The generator maintains a comprehensive dictionary, ```STATE_RANGES```, which defines the visual and logical parameters for all 32 Mexican states. Each entry specifies:
+- **Prefix Ranges**: ```start``` - ```end``` strings defining the legal character boundaries for that state
+- **Format Strings**: Logic for character placement (e.g., ```LLL-NNN-L``` for Aguascalientes)
+- **Color Schemes**: RGB tuples for text rendering (e.g., Chihuahua uses blue (9, 37, 210))
+- **Vertical Alignment**: ```y_offset``` to account for variations in background template designs (subjective position)
 
-### Key Features
+Example of a couple of ```STATE_RANGES``` entries:
+```
+STATE_RANGES = {
+    "ags": {  # Aguascalientes
+        "start": "AAA",
+        "end": "AFZ",
+        "format": "LLL-NNN-L",
+        "color": (30, 30, 30),   # Dark gray
+        "y_offset": 5
+    },
+    "chih": {  # Chihuahua
+        "start": "DTA",
+        "end": "ETZ",
+        "format": "LLL-NNN-L",
+        "color": (9, 37, 210),   # Blue
+        "y_offset": 3
+    }
+    ...
+}
+```
 
-- **Standard-Compliant**: Follows NOM-001-SCT-2-2016 Mexican official standard
-- **All 32 States**: Supports all Mexican states with their specific formats and color schemes
-- **Rich Metadata**: Includes vehicle details, ownership information, and legal status
-- **Unique Generation**: Ensures unique license plates across the dataset
-- **Organized Output**: Structured directory layout with CSV metadata
-- **Progress Tracking**: Visual progress bars for generation monitoring
+## Plate Generation Logic
+### Format Enforcement
+The method ```_generate_plate_text(state_code)``` interprets the format string from ```STATE_RANGES``` to build the plate string:
+1. L: Replaced by a random letter from SYMBOLS (excluding I, O, Ñ, Q per standard)
+2. N: Replaced by a random digit (0-9)
+3. -: Preserved as a class separator.
 
-## Project Structure
+### Font Rendering
+The generator uses ```NOM-001-SCT-2-2016.ttf```, a font specifically designed to mimic the official Mexican typography. The ```_create_plate_image``` method handles the drawing process:
+- Loads the state template image from ```templates/{state}.jpg```
+- Calculates the center position for the text
+- Applies the ```y_offset``` and renders the text using ```ImageDraw.text()```
+
+## Metadata and CSV Output
+For every image generated, the system creates a corresponding entry in ```license_plates_metadata.csv```. This metadata includes randomized but realistic vehicle information sourced from data pools like ```MAKE_MODEL```, ```COLORS```, and ```OWNERS```.
+
+### CSV Schema Fields 
+- ```Matricula```: The generated plate text (e.g., "ABC-123-A").
+- ```Estado```: Full name of the Mexican state.
+- ```Marca/Modelo```: Vehicle make and model.
+- ```Color```: Vehicle color.
+- ```Propietario```: Randomly generated owner name.
+- ```FechaRegistro```: Randomized registration date within the last 10 years 
+- ```Filename```: Path to the saved .jpg file.
+
+## Module Structure
 ```
 /MLP-Generator
 |---- /dataset                # Created after running generator.py
@@ -46,17 +89,24 @@ python generator.py
 
 This will generate 250 images per state (8,000 total images) in the */dataset* directory.
 
+**Note**: Make sure you run the script from the directory ```~/LPR-Sentinel/src/MLP-Generator```
+
 ### Custom Configuration
 Modify the parameters in the main() function:
 
 ```bash
+N = 250
 generator.generate_variants_with_csv(
-    num_variants = 250,                    # Images per state
-    states = ["df", "jal", "nl", "mex"],   # Specific states (optional)
-    output_dir = "custom_dataset",          # Output directory
+    num_variants = N,                       # Images per state
+    output_dir = "custom_dataset_folder",   # Output directory
     csv_filename = "metadata.csv"           # Metadata file name
 )
 ```
+
+## Limitations
+- Does not generate license plates with special characters or accents
+- Does not simulate physical wear, rotation, or weather conditions
+- The font is an unofficial approximation (there is no official public font)
 
 ## License
 This project is provided for research and educational purposes. The generated data should not be used for fraudulent activities or misrepresentation.
