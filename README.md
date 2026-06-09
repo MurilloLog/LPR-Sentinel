@@ -10,7 +10,7 @@ LPR-Sentinel is a system for synthetic data generation, augmentation, detection,
 The project adopts a "synthetic-data-first" philosophy, training its main neural network entirely on procedurally generated data to avoid the ethical and legal complexities of real-world vehicle images. Its purpose is to demonstrate how synthetic data pipelines can enable ethical, low-cost, and reproducible machine learning solutions for real-world challenges in Mexico.
 
 ## System Requirements
-The system is primarily developed in Python 3.11.9 and leverages the ONNX Runtime for high‑performance inference on edge devices.
+The system is primarily developed in Python [3.11.9](https://www.python.org/downloads/release/python-3119/) and leverages the ONNX Runtime for high‑performance inference on edge devices.
 The minimum requirements to replicate the project are listed below:
 
 |Component | Requirement |
@@ -18,7 +18,7 @@ The minimum requirements to replicate the project are listed below:
 |Edge Device | Raspberry Pi 4B |
 |Capture Device | Conventional USB camera (minimum 720p resolution)|
 |Operating System | Raspberry Pi OS Lite (Debian 13, Trixie)|
-|Python | 3.11.9 |
+|Python | ```3.11.9``` |
 |Core Libraries | ```onnxruntime```, ```opencv-python```, ```numpy```|
 |Hardware (CPU) | x86_64 or ARM64 architecture with at least 4 cores|
 |Memory (RAM) | Minimum 8 GB (16 GB recommended for training) |
@@ -69,10 +69,24 @@ cd LPR-Sentinel
 python -m venv venv
 .\venv\Scripts\Activate.ps1
 ```
+<details>
+<summary>PowerShell Execution Policy Error</summary>
+If you recive the error:
 
+```bash
+Activate.ps1 cannot be loaded because running scripts is disabled on this system...
+```
+
+when trying to activate the virtual environment, open **PowerShell as Administrator** and run the following command:
+
+```bash
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+```
+
+</details>
+  
 **Install LPR-Sentinel dependencies**
 ```bash
-pip install --upgrade pip setuptools wheel
 pip install -r requirements.txt
 ```
 </details>
@@ -146,24 +160,30 @@ This prefix ```(venv)``` indicates that the virtual environment is correctly act
 cd src/MLP-Pipeline
 ```
 
-- If you intend to retrain or fine‑tune models, refer to the dedicated training documentation (README in the training section), which explains dataset preparation, configuration files, and training commands.
+- If you intend to retrain or fine‑tune models, refer to the dedicated training documentation ([README](src/MLP-Recognizer/README.md) module in the respective section), which explains dataset preparation, configuration files, and training commands.
 
 ### Image Mode
-Use this mode to process a single image file. The system will detect and recognize license plates in the provided image.
-
+This mode processes a single image file and displays the detection and recognition results directly in the terminal.
 ```bash
-python main_rt.py --image image.png --output custom_output_dir
+python main_rt.py --image custom_image_path.png --output custom_output_dir
 ```
+- ```custom_image_path.png```: Replace with the path to the image you want to process (supported formats: .png or .jpg).
+- **Sample images**: You can find several example images in the ```input/``` directory.
+- ```custom_output_dir```: The processed image with annotations will be saved in the specified output folder. If not provided, results are stored in the current directory.
 
 ### Video Mode
-Use this mode to process a video file. The system will generate a new video file with plate anotations.
+This mode processes a video file frame by frame and generates a new video with license plate annotations.
 
 ```bash
 python main_rt.py --video input.mp4 --output-video output.mp4 
 ```
 
+- ```input.mp4```: Replace with the path to the video you want to process.
+- **Sample videos**: Example files can be placed in the ```input/``` directory for testing.
+- ```output.mp4```: The processed video with annotations will be saved under the name you specify. If not provided, results will not be saved.
+
 ### Real-time Camera Mode
-Use this mode to process live camera feed.
+This mode processes a live camera feed and displays detection and recognition results directly in an OpenCV window.
 ```bash
 # Default camera
 python main_rt.py --camera
@@ -171,6 +191,9 @@ python main_rt.py --camera
 # Specific camera
 python main_rt.py --camera --camera-id 1
 ```
+
+- **Default camera**: If no ```--camera-id``` is provided, the system uses the default camera (ID 0).
+- ```--camera-id```: Use this option to select a specific camera device connected to your system.
 
 ## Benchmarks
 ### Raspberry Pi
