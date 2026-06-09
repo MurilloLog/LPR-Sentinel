@@ -1,90 +1,245 @@
-# LPR-Sentinel: A High-Speed Neural Vision System for License Plate Recognition
+# LPR-Sentinel: A High-Speed Neural Vision System for Mexican License Plate Recognition
 
-LPR-Sentinel is a system for synthetic data generation, augmentation, detection, and recognition of license plates for Mexican private vehicles. It is explicitly designed to comply with the guidelines established in the first version of NOM-001-SCT-2-2016. This regulation, issued by the Secretariat of Communications and Transportation (SCT), defines the physical, typographic, and security specifications that license plates must meet nationwide.
+<div align="center">
+  <strong>Primer Concurso de Innovación. Programación y Sistemas Inteligentes 2026</strong><br>
+  <strong>Category: B-LPR | Team: LPR-Sentinel</strong>
+</div>
 
-For its detection module, LPR-Sentinel leverages the lightweight YOLOv8n architecture, optimized for real-time performance. For the recognition stage, it integrates FastPlateOCR, a fast and efficient OCR engine tailored for license plate text extraction.
+LPR-Sentinel is a system for synthetic data generation, augmentation, detection, and recognition of license plates for Mexican private vehicles. It is explicitly designed to comply with the guidelines established in the first version of [NOM-001-SCT-2-2016](https://www.dof.gob.mx/nota_detalle.php?codigo=5442476&fecha=24/06/2016#gsc.tab=0) standard.
 
-## Features
-
-- **Multi-mode Operation**: Process single images, video files, or real-time camera streams
-- **License Plate Detection**: YOLO-based ONNX detector for accurate plate localization
-- **OCR Recognition**: FastPlateOCR-based ONNX model for text extraction from license plates
-- **Database Integration**: SQLite database for plate information storage and retrieval
-- **Performance Optimizations**: Frame skipping, detection cooldown, and efficient processing
-- **Debugging Tools**: Frame quality analysis, debug output saving, and test frame functionality
-- **Logging**: Automatic detection logging with timestamps and confidence scores
+The project adopts a "synthetic-data-first" philosophy, training its main neural network entirely on procedurally generated data to avoid the ethical and legal complexities of real-world vehicle images. Its purpose is to demonstrate how synthetic data pipelines can enable ethical, low-cost, and reproducible machine learning solutions for real-world challenges in Mexico.
 
 ## System Requirements
+The system is primarily developed in Python 3.11.9 and leverages the ONNX Runtime for high‑performance inference on edge devices.
+The minimum requirements to replicate the project are listed below:
 
-- Python 3.11.9
-- OpenCV
-- ONNX Runtime
-- NumPy
-- Pandas
-- PyYAML
-- imutils
+|Component | Requirement |
+|-|-|
+|Edge Device | Raspberry Pi 4B |
+|Capture Device | Conventional USB camera (minimum 720p resolution)|
+|Operating System | Raspberry Pi OS Lite (Debian 13, Trixie)|
+|Python | 3.11.9 |
+|Core Libraries | ```onnxruntime```, ```opencv-python```, ```numpy```|
+|Hardware (CPU) | x86_64 or ARM64 architecture with at least 4 cores|
+|Memory (RAM) | Minimum 8 GB (16 GB recommended for training) |
+|Storage | At least 10 GB free disk space for datasets and model checkpoints |
+|Dependencies | Build tools (```pip```, ```setuptools```, ```build-essential```, ```git```) installed
 
-## Installation
+## Installation Guide
+The following instructions explain how to set up LPR-Sentinel on different platforms. Choose the section that matches your environment.
 
-To install LPR-Sentinel, first install all dependencies listed in the ```requirements.txt``` file by running the following commands:
+<details>
+<summary>Linux / Ubuntu (bash)</summary>
 
+**Update system packages**
 ```bash
-# Clone the repository
-git clone https://github.com/MurilloLog/LPR-Sentinel
-cd LPR-Sentinel
+sudo apt update && sudo apt upgrade -y
+```
 
-# Install dependencies
+**Clone the repository**
+```bash
+git clone https://github.com/MurilloLog/LPR-Sentinel.git
+cd LPR-Sentinel
+```
+
+**Create and activate virtual environment (Optional)**
+```bash
+python3 -m venv venv
+source venv/bin/activate
+```
+
+**Install LPR-Sentinel dependencies**
+```bash
+pip install --upgrade pip setuptools wheel
 pip install -r requirements.txt
+```
+</details>
+
+<details>
+<summary>Windows (PowerShell)</summary>
+
+**Clone the repository**
+```bash
+git clone https://github.com/MurilloLog/LPR-Sentinel.git
+cd LPR-Sentinel
+```
+
+**Create and activate virtual environment (Optional)**
+```bash
+python -m venv venv
+.\venv\Scripts\Activate.ps1
+```
+
+**Install LPR-Sentinel dependencies**
+```bash
+pip install --upgrade pip setuptools wheel
+pip install -r requirements.txt
+```
+</details>
+
+<details>
+<summary>Raspberry Pi OS (ARM64)</summary>
+
+**Update system packages**
+```bash
+sudo apt update && sudo apt upgrade -y
+```
+
+**Clone the repository**
+```bash
+git clone https://github.com/MurilloLog/LPR-Sentinel.git
+cd LPR-Sentinel
+```
+
+**Create and activate virtual environment (Optional)**
+```bash
+python3 -m venv venv
+source venv/bin/activate
+```
+
+**Install LPR-Sentinel dependencies**
+```bash
+pip install --upgrade pip setuptools wheel
+pip install -r requirements.txt
+```
+</details>
+
+## Project Structure
+
+After cloning the repository and installing dependencies, the directory tree is organized as follows:
+```
+LPR-Sentinel/
+├── docs/                  # White-paper (pre-print)
+├── tests/                 # Tests scripts for device capture
+├── venv/                  # Virtual environment (optional)
+├── requirements.txt       # Python dependencies
+├── src/
+|   ├── MLP-Generator/     # Synthetic data generation module
+│   ├── MLP-Augmentator/   # Synthetic data augmentation module
+│   ├── MLP-Detector/      # Plate detection module
+│   ├── MLP-Recognizer/    # OCR module
+│   ├── MLP-Register/      # DB module
+│   └── MLP-Pipeline/      # LPR-Sentinel pipeline
+│       └── main_rt.py     # Entry point script
+├── requirements.txt       # All LPR-Sentinel dependencies
+├── README.md              # This documentation
+├── .gitignore
+└── LICENSE
 ```
 
 ## Usage Guide
+The system can be executed in three main modes: ```Image Mode```, ```Video Mode```, and ```Real‑time Camera Mode```. Each mode is designed to handle different input sources and provides flexible options for output and debugging.
 
-### Image Mode
-Process a single image file:
+Before running any command, ensure that:
+- All commands must be executed inside the repository root, with the virtual environment activated (if created).
+- The command‑line interface (CLI) should look similar to the following when the environment is active:
 
 ```bash
-python main_rt.py --image path/to/image.jpg
+(venv) user@machine:~/LPR-Sentinel$
+```
+
+This prefix ```(venv)``` indicates that the virtual environment is correctly activated.
+
+- If you only want to execute the pipeline (image, video, or camera modes) without retraining models, navigate to the pipeline directory:
+
+```bash
+cd src/MLP-Pipeline
+```
+
+- If you intend to retrain or fine‑tune models, refer to the dedicated training documentation (README in the training section), which explains dataset preparation, configuration files, and training commands.
+
+### Image Mode
+Use this mode to process a single image file. The system will detect and recognize license plates in the provided image.
+
+```bash
 python main_rt.py --image image.png --output custom_output_dir
 ```
 
 ### Video Mode
-
-Process a video file:
+Use this mode to process a video file. The system will generate a new video file with plate anotations.
 
 ```bash
-# Basic video processing
-python main_rt.py --video input_video.mp4
-
-# With custom output and frame range
-python main_rt.py --video input.mp4 --output-video output.mp4 --start-frame 100 --end-frame 500
-
-# Display video window during processing
-python main_rt.py --video input.mp4 --display
-
-# Test a specific frame for debugging
-python main_rt.py --video input.mp4 --test-frame 150
+python main_rt.py --video input.mp4 --output-video output.mp4 
 ```
 
 ### Real-time Camera Mode
-Process live camera feed:
-
+Use this mode to process live camera feed.
 ```bash
-# Default camera (ID 0)
+# Default camera
 python main_rt.py --camera
 
-# Specific camera with recording
-python main_rt.py --camera --camera-id 1 --output-video recording.mp4
+# Specific camera
+python main_rt.py --camera --camera-id 1
 ```
 
-### Limitations
-
-- Requires pre-trained ONNX models for detection and OCR
-- Performance depends on lighting conditions and camera quality
-- Database must contain relevant license plate records
-- Mexican license plate format assumed (alphanumeric with optional hyphens)
-
-
-
+## Benchmarks
+### Raspberry Pi
+|Stage | Mean (ms) | p50(ms) | p95(ms) | p99(ms) |
+|-|-|-|-|-|
+|Detection|568.69|534.8|665.15|678.17|
+|Recognition|55.06|54.85|59.32|61.24|
+|DB access|1.68|1.64|1.98|2.83|
 
 
+### Ryzen 7 5700G
+|Stage | Mean (ms) | p50(ms) | p95(ms) | p99(ms) |
+|-|-|-|-|-|
+|Detection|51.46|45.90|73.78|75.67|
+|Recognition|4.51|4.47|5.18|6.26|
+|DB access|0.68|0.68|0.72|1.04|
 
+### Average Performance
+|Metric|Raspberry Pi 4B|
+|-|-|
+|Global Accuracy|82%|
+|Daytime Accuracy|88%|
+|Nighttime Accuracy|76%|
+|False Positives|0%|
+|False Negatives|18%|
+|CPU Usage|64.79%|
+|RAM per Inference (avg)|199.90 MB|
+|RAM Peak|203.6 MB|
+|Throughput (img/s)|1.21|
+|Disk Size|13.65 MB|
+
+## Limitations
+Despite its portability and reproducibility, LPR‑Sentinel has several constraints that should be considered when deploying or extending the system:
+
+- Pre‑trained Models Required  
+The pipeline depends on pre‑trained ONNX models for both detection and OCR. Retraining is possible but requires additional datasets and configuration files.
+
+- Sensitivity to Environmental Conditions  
+Performance is influenced by external factors such as lighting quality, weather conditions, and the resolution of the capture device. Daytime accuracy is consistently higher than nighttime accuracy.
+
+- Camera Quality Dependency  
+A conventional USB camera is sufficient, but low‑resolution or poorly calibrated devices may reduce detection reliability.
+
+- Database Integration  
+The system assumes that the connected database contains relevant license plate records. Without proper indexing and coverage, recognition results cannot be validated or cross‑referenced.
+
+- Format Assumptions  
+Current implementation is tailored to Mexican license plate formats (alphanumeric with optional hyphens). Plates from other regions may require additional training or configuration.
+
+## Acknowledgements
+This project builds upon open‑source foundations such as YOLO (You Only Look Once) and FastPlateOCR, which provided the baseline architectures for detection and recognition. While these frameworks did not sponsor or directly support this work, their availability was essential for the development of LPR‑Sentinel. We acknowledge the contributions of their respective communities.
+
+## Citation
+If you find our work helpful for your research or projects, please consider citing the following BibTeX entry to give proper credit:
+
+```bibtex
+@misc{lprsentinel,
+author       = {Murillo Gutierrez, Gustavo Adolfo},
+title        = {LPR-Sentinel: A High-Speed Neural Vision System for Mexican License Plate Recognition},
+year         = {2026},
+publisher    = {GitHub},
+journal      = {GitHub Repository},
+howpublished = {\url{https://github.com/MurilloLog/LPR-Sentinel}}
+}
+```
+
+## Contribute
+We welcome and appreciate all contributions!
+If you notice any issues or bugs, have questions, or would like to suggest new features, please open an issue or submit a pull request. By sharing your ideas and improvements, you help strengthen the project and expand its impact.
+
+## Demonstration Video
+For a practical demonstration of LPR‑Sentinel in action, please visit our official YouTube video: [Watch the demo on YouTube](https://youtu.be/tQm2vJjAT2A)
