@@ -1119,9 +1119,7 @@ class MexicanLicencePlateDetector:
             
             # Display FPS on frame
             cv2.putText(processed_frame, f"FPS: {fps_display}", (10, 30),
-                       cv2.FONT_HERSHEY_SIMPLEX, 10, (0, 255, 255), 2)
-            #cv2.putText(processed_frame, f"Detections: {detection_count}", (10, 120),
-            #           cv2.FONT_HERSHEY_SIMPLEX, 10, (0, 255, 255), 2)
+                       cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 255), 2)
             
             # Save frame if recording
             if self.video_writer:

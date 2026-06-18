@@ -1,7 +1,7 @@
 from roboflow import Roboflow
 from ultralytics import YOLO
 
-rf = Roboflow(api_key="aYnmGP70Ofqcas4vynAq")
+rf = Roboflow(api_key="API_KEY")
 project = rf.workspace("licenseplate-s6fjf").project("license-plate-xmnzu")
 version = project.version(1)
 dataset = version.download("yolov11")
